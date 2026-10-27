@@ -1,0 +1,356 @@
+<!DOCTYPE html><html lang="en-GB" data-astro-cid-hkbrpulz><head><script async src="https://www.googletagmanager.com/gtag/js?id=G-F16ZZFP5E4"></script><script>window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', "G-F16ZZFP5E4");</script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>LLM tool calling from scratch: a calculator | mvGPT</title><meta name="description" content="We fine-tune the model we pretrained on the web to call a calculator, in plain text, and measure how often it calls it right, on questions asked the way training asks and in new ways, with the calculator and without it."><link rel="canonical" href="https://mvgpt.nenuadrian.com/ep020-tools/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="alternate" type="application/rss+xml" title="mvGPT" href="/rss.xml"><link rel="sitemap" href="/sitemap.xml"><meta name="theme-color" content="#101215"><meta property="og:site_name" content="mvGPT"><meta property="og:type" content="video.episode"><meta property="og:title" content="LLM tool calling from scratch: a calculator"><meta property="og:description" content="We fine-tune the model we pretrained on the web to call a calculator, in plain text, and measure how often it calls it right, on questions asked the way training asks and in new ways, with the calculator and without it."><meta property="og:url" content="https://mvgpt.nenuadrian.com/ep020-tools/"><meta property="og:locale" content="en_GB"><meta property="og:image" content="https://i.ytimg.com/vi/UrlqjWEuYH4/maxresdefault.jpg"><meta property="og:image:alt" content="LLM tool calling from scratch: a calculator | Minimum Viable GPT #20"><meta name="twitter:card" content="summary_large_image"><style>@font-face{font-family:"aphrodite-display";src:url("/fonts/display-SpaceGrotesk-Medium.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"aphrodite-display";src:url("/fonts/display-SpaceGrotesk-Bold.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+:root{--bg:#101215;--bg-rgb:16 18 21;--surface:#14171b;--surface-2:#191d22;--line:#1f242b;--shadow:#272d36;--text:#e8ecf2;--heading:#eef2f8;--prose:#d8dce2;--muted:#a6aab0;--faint:#81868d;--ember:#9fb4ff;--ember-2:#a8e6ed;--on-ember:#14171b;--code:#9FB4FF;--font-display:"aphrodite-display", var(--font-ui);--font-ui:"Inter", -apple-system, 'Helvetica Neue', sans-serif;--font-mono:"JetBrains Mono", Menlo, monospace;--font-hand:"Caveat", 'Comic Sans MS', cursive}</style><style>/* mvGPT's website on top of aphrodite's: a near-black slate, a soft glow, titles in a periwinkle ->
+   white -> mint ramp, Space Grotesk throughout. aphrodite's own rules are in a cascade layer, so
+   these win over them; its markup is the same for both series, and site/components/ holds what's
+   mvGPT's alone (the brand, the heroes, the token field, the model to try, the player's icons). */
+
+/* Space Grotesk (public/fonts/, from @fontsource/space-grotesk 5.3.0, OFL). */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(/fonts/space-grotesk-latin-ext-400-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(/fonts/space-grotesk-latin-400-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(/fonts/space-grotesk-latin-ext-500-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(/fonts/space-grotesk-latin-500-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(/fonts/space-grotesk-latin-ext-600-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(/fonts/space-grotesk-latin-600-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(/fonts/space-grotesk-latin-ext-700-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(/fonts/space-grotesk-latin-700-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+:root {
+  --bg: #101215;
+  --bg-rgb: 16 18 21;
+  --surface: #15181c;
+  --surface-2: #1b1f24;
+  --line: #262a31;
+  --text: #e8ecf2;
+  --heading: var(--text);
+  --prose: #cfd3da;
+  --muted: #abadb0;
+  --faint: #7d8087;
+  --peri: #9fb4ff;
+  --white: #eef2f8;
+  --mint: #a8e6ed;
+  --brace: #8b9de8;
+  --ember: var(--peri);
+  --ember-2: var(--mint);
+  --on-ember: #101215;
+  --on-accent: #101215;
+  --code: var(--mint);
+  --grad: linear-gradient(100deg, var(--peri) 0%, var(--white) 50%, var(--mint) 100%);
+  --font-display: 'Space Grotesk', -apple-system, 'Helvetica Neue', sans-serif;
+  --font-ui: var(--font-display);
+  --font-mono: 'JetBrains Mono', Menlo, monospace;
+  /* The names our own parts use. */
+  --display: var(--font-display);
+  --ui: var(--font-ui);
+  --mono: var(--font-mono);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1.1;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: inherit;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  text-shadow: none;
+}
+
+/* Gradient title text, as on the thumbnails. */
+.grad {
+  width: fit-content;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Kicker tags: small mono labels in thin outlines, the first in periwinkle. */
+.tags {
+  gap: 8px;
+}
+.tags > *,
+.tags > :last-child {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: rgb(16 18 21 / 0.6);
+}
+.tags > :first-child {
+  border-color: rgb(159 180 255 / 0.45);
+  color: var(--peri);
+}
+
+/* A hero with the soft glow behind its title. */
+.glow {
+  position: relative;
+  isolation: isolate;
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+.glow::before {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  inset: -30% -10% -30% 25%;
+  background:
+    radial-gradient(closest-side at 55% 50%, rgb(159 180 255 / 0.1), transparent),
+    radial-gradient(closest-side at 75% 55%, rgb(168 230 237 / 0.06), transparent);
+  pointer-events: none;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+}
+
+/* The bar: in the page's flow, frosted, sliding away while scrolling down. */
+.bar,
+.bar.solid {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgb(16 18 21 / 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+  transition: transform 200ms ease;
+}
+.bar-inner {
+  padding-block: 14px;
+}
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+  text-shadow: none;
+}
+.curly {
+  color: var(--brace);
+  font-weight: 400;
+}
+.curly:first-child {
+  margin-right: 0.08em;
+}
+.curly:last-child {
+  margin-left: 0.08em;
+}
+.bar nav {
+  flex-wrap: nowrap;
+  gap: clamp(14px, 3vw, 28px);
+}
+.bar nav a {
+  color: var(--muted);
+}
+.bar nav a:hover {
+  color: var(--white);
+}
+@media (max-width: 480px) {
+  .bar nav {
+    gap: 12px;
+  }
+  .bar nav a {
+    white-space: nowrap;
+    font-size: 0.88rem;
+  }
+}
+
+/* Episode cards: lifting with a glow. */
+.card {
+  overflow: hidden;
+  box-shadow: none;
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+.card:hover {
+  border-color: rgb(159 180 255 / 0.5);
+  box-shadow: 0 10px 40px -12px rgb(159 180 255 / 0.25);
+  transform: translateY(-2px);
+}
+.card .placeholder {
+  background: radial-gradient(closest-side, rgb(159 180 255 / 0.1), transparent) var(--bg);
+}
+.card .placeholder span,
+.player.draft .display {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.card .placeholder span {
+  font-size: clamp(1.5rem, 3.4vw, 2rem);
+}
+.card .tags > * {
+  font-size: 0.78rem;
+  border-width: 1px;
+}
+.card h3 {
+  font-weight: 600;
+}
+
+/* The player: square, with a square play button, and a mini player that pops in. */
+.player {
+  overflow: hidden;
+  box-shadow: 0 20px 60px -24px rgb(159 180 255 / 0.25);
+}
+.player.draft {
+  background: radial-gradient(closest-side, rgb(159 180 255 / 0.1), transparent) var(--bg);
+}
+.player.draft p {
+  background: none;
+}
+.screen.docked {
+  z-index: 4;
+  animation: pop 180ms ease-out;
+}
+.docked .frame {
+  box-shadow:
+    0 18px 48px -12px rgb(0 0 0 / 0.7),
+    0 0 0 1px rgb(159 180 255 / 0.12);
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen.docked {
+    animation: none;
+  }
+}
+.close {
+  top: -11px;
+  right: -11px;
+}
+.corner .close {
+  right: -6px;
+}
+.close:hover {
+  color: var(--white);
+  border-color: rgb(159 180 255 / 0.5);
+}
+.close svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: square;
+}
+.start .play {
+  width: 76px;
+  height: 76px;
+  color: var(--peri);
+  filter: drop-shadow(0 6px 24px rgb(0 0 0 / 0.5));
+  transition:
+    color 150ms ease,
+    scale 150ms ease;
+}
+.docked .start .play {
+  width: 48px;
+  height: 48px;
+}
+.start:hover .play,
+.start:focus-visible .play {
+  color: var(--mint);
+  scale: 1.06;
+}
+
+/* An episode page: quiet times, thin rules. */
+.time {
+  color: var(--faint);
+}
+a.time:hover {
+  color: var(--mint);
+  text-decoration: none;
+}
+.chapters {
+  border-left-width: 1px;
+}
+.chapters a:hover {
+  box-shadow: -2px 0 0 var(--peri);
+}
+.pager a:hover {
+  border-color: rgb(159 180 255 / 0.5);
+}
+
+/* Square corners everywhere, form controls too, whatever the browser draws by default. */
+button,
+input,
+textarea,
+select {
+  border-radius: 0;
+}
+</style><script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoObject","name":"LLM tool calling from scratch: a calculator | Minimum Viable GPT #20","description":"Our web model writes fluent text but can't do arithmetic, so today we teach it to call a calculator, as Toolformer did, writing the call as plain text for the program running it to fill in. We generate fifty thousand questions and fine-tune for ten minutes on the laptop, with the questions and the calculator's results left out of the loss. Then we measure the calls on held-out questions, worded the way training words them and in new ways, with the calculator and without it.","thumbnailUrl":["https://i.ytimg.com/vi/UrlqjWEuYH4/maxresdefault.jpg"],"uploadDate":"2026-10-18","duration":"PT0H20M49S","embedUrl":"https://www.youtube.com/embed/UrlqjWEuYH4","url":"https://www.youtube.com/watch?v=UrlqjWEuYH4","hasPart":[{"@type":"Clip","name":"Intro","startOffset":0,"endOffset":125,"url":"https://www.youtube.com/watch?v=UrlqjWEuYH4"},{"@type":"Clip","name":"Calling a tool","startOffset":125,"endOffset":397,"url":"https://www.youtube.com/watch?v=UrlqjWEuYH4&t=125s"},{"@type":"Clip","name":"Fifty thousand questions","startOffset":397,"endOffset":637,"url":"https://www.youtube.com/watch?v=UrlqjWEuYH4&t=397s"},{"@type":"Clip","name":"Fine-tuning","startOffset":637,"endOffset":852,"url":"https://www.youtube.com/watch?v=UrlqjWEuYH4&t=637s"},{"@type":"Clip","name":"Measuring the calls","startOffset":852,"endOffset":1144,"url":"https://www.youtube.com/watch?v=UrlqjWEuYH4&t=852s"},{"@type":"Clip","name":"Wrap-up","startOffset":1144,"endOffset":1249,"url":"https://www.youtube.com/watch?v=UrlqjWEuYH4&t=1144s"}]}</script><meta property="video:release_date" content="2026-10-18"><meta property="video:duration" content="1250"><meta property="video:tag" content="tool use"><meta property="video:tag" content="function calling"><meta property="video:tag" content="calculator"><meta property="video:tag" content="toolformer"><meta property="video:tag" content="fine-tuning"><meta property="video:tag" content="sft"><meta property="video:tag" content="loss masking"><meta property="video:tag" content="gpt"><meta property="video:tag" content="language model"><meta property="video:tag" content="llm"><meta property="video:tag" content="from scratch"><meta property="video:tag" content="mvgpt"><link rel="stylesheet" href="/_astro/_id_.zno4cNTK.css"><style>.token-field[data-astro-cid-r5v4z3ma]{z-index:-1;pointer-events:none;width:100%;height:100%;position:absolute;inset:0}
+</style><link rel="stylesheet" href="/_astro/Base.dQHtagFK.css"></head><body data-palette="{&quot;field&quot;:[&quot;#101215&quot;,&quot;#14171b&quot;,&quot;#191d22&quot;,&quot;#1f242b&quot;,&quot;#272d36&quot;,&quot;#343b47&quot;,&quot;#48526a&quot;,&quot;#6a77a0&quot;],&quot;ember&quot;:[&quot;#9fb4ff&quot;,&quot;#a8e6ed&quot;]}" data-astro-cid-hkbrpulz><header class="bar" data-astro-cid-hkbrpulz><div class="wrap bar-inner" data-astro-cid-hkbrpulz><a class="brand" href="/" data-astro-cid-hkbrpulz><span class="curly">{</span><span class="grad">mvGPT</span><span class="curly">}</span></a><nav aria-label="Site" data-astro-cid-hkbrpulz><a class="episodes" href="/#episodes" data-astro-cid-hkbrpulz>Episodes</a><a href="/about/" data-astro-cid-hkbrpulz>About</a><a href="https://www.youtube.com/playlist?list=PLR-9Y4UPbi8n5DURn9WMeMu3V_EJ7GD-A" data-astro-cid-hkbrpulz>YouTube</a><a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>Code</a><a href="https://nenuadrian.github.io/mvGPT/" data-astro-cid-hkbrpulz>Docs</a><a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-hkbrpulz><span class="long" data-astro-cid-hkbrpulz>Hugging Face</span><abbr class="short" title="Hugging Face" data-astro-cid-hkbrpulz>HF</abbr></a></nav></div></header><header class="hero glow" data-astro-cid-4ikiqo7u><canvas class="token-field" aria-hidden="true" data-words="[&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;girl&quot;,&quot;named&quot;,&quot;Sam&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;was&quot;,&quot;scared&quot;,&quot;because&quot;,&quot;he&quot;,&quot;needed&quot;,&quot;to&quot;,&quot;go&quot;,&quot;.&quot;,&quot;He&quot;,&quot;thought&quot;,&quot;for&quot;,&quot;help&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;had&quot;,&quot;a&quot;,&quot;little&quot;,&quot;bit&quot;,&quot;a&quot;,&quot;long&quot;,&quot;bed&quot;,&quot;and&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;do&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;showed&quot;,&quot;it&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;said&quot;,&quot;,&quot;,&quot;\&quot;&quot;,&quot;Why&quot;,&quot;are&quot;,&quot;you&quot;,&quot;sad&quot;,&quot;?\&quot;&quot;,&quot;Tim&quot;,&quot;was&quot;,&quot;sad&quot;,&quot;and&quot;,&quot;strong&quot;,&quot;.&quot;,&quot;He&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;help&quot;,&quot;.&quot;,&quot;But&quot;,&quot;he&quot;,&quot;did&quot;,&quot;not&quot;,&quot;know&quot;,&quot;what&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;boy&quot;,&quot;named&quot;,&quot;Tim&quot;,&quot;.&quot;,&quot;He&quot;,&quot;loved&quot;,&quot;to&quot;,&quot;play&quot;,&quot;with&quot;,&quot;his&quot;,&quot;friends&quot;,&quot;.&quot;,&quot;One&quot;,&quot;day&quot;,&quot;,&quot;,&quot;Tim&quot;,&quot;saw&quot;,&quot;a&quot;,&quot;big&quot;,&quot;bird&quot;,&quot;in&quot;,&quot;his&quot;,&quot;park&quot;,&quot;.&quot;,&quot;He&quot;,&quot;was&quot;,&quot;a&quot;,&quot;big&quot;,&quot;,&quot;,&quot;white&quot;,&quot;dog&quot;,&quot;came&quot;,&quot;to&quot;,&quot;see&quot;,&quot;a&quot;,&quot;tree&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;and&quot;,&quot;Sam&quot;,&quot;went&quot;,&quot;to&quot;,&quot;play&quot;,&quot;with&quot;,&quot;the&quot;,&quot;tree&quot;,&quot;.&quot;,&quot;They&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;play&quot;,&quot;too&quot;,&quot;.&quot;,&quot;They&quot;,&quot;went&quot;,&quot;to&quot;,&quot;play&quot;,&quot;together&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;girl&quot;,&quot;named&quot;,&quot;Lucy&quot;,&quot;.&quot;,&quot;She&quot;,&quot;was&quot;,&quot;so&quot;,&quot;happy&quot;,&quot;.&quot;,&quot;She&quot;,&quot;had&quot;,&quot;lots&quot;,&quot;of&quot;,&quot;fun&quot;,&quot;.&quot;,&quot;And&quot;,&quot;then&quot;,&quot;,&quot;,&quot;she&quot;,&quot;saw&quot;,&quot;a&quot;,&quot;big&quot;,&quot;red&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;Lucy&quot;,&quot;was&quot;,&quot;lost&quot;,&quot;.&quot;,&quot;She&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;play&quot;,&quot;with&quot;,&quot;the&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;They&quot;,&quot;started&quot;,&quot;to&quot;,&quot;make&quot;,&quot;a&quot;,&quot;new&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;Lucy&quot;,&quot;was&quot;,&quot;happy&quot;,&quot;.&quot;,&quot;She&quot;,&quot;had&quot;,&quot;a&quot;,&quot;ball&quot;,&quot;,&quot;,&quot;and&quot;,&quot;it&quot;,&quot;was&quot;,&quot;very&quot;,&quot;happy&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;mouse&quot;,&quot;who&quot;,&quot;was&quot;,&quot;very&quot;,&quot;lonely&quot;,&quot;.&quot;,&quot;He&quot;,&quot;loved&quot;,&quot;to&quot;,&quot;play&quot;,&quot;together&quot;,&quot;,&quot;,&quot;and&quot;,&quot;the&quot;,&quot;mouse&quot;,&quot;would&quot;,&quot;fly&quot;,&quot;around&quot;,&quot;and&quot;,&quot;make&quot;,&quot;things&quot;,&quot;.&quot;,&quot;One&quot;,&quot;day&quot;,&quot;,&quot;,&quot;a&quot;,&quot;little&quot;,&quot;girl&quot;,&quot;named&quot;,&quot;Lucy&quot;,&quot;saw&quot;,&quot;a&quot;,&quot;big&quot;,&quot;rock&quot;,&quot;in&quot;,&quot;the&quot;,&quot;ground&quot;,&quot;.&quot;,&quot;She&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;wear&quot;,&quot;a&quot;,&quot;bird&quot;,&quot;.&quot;,&quot;there&quot;,&quot;lived&quot;,&quot;a&quot;,&quot;little&quot;,&quot;boy&quot;,&quot;named&quot;,&quot;Tim&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;had&quot;,&quot;a&quot;,&quot;toy&quot;,&quot;that&quot;,&quot;was&quot;,&quot;a&quot;,&quot;big&quot;,&quot;box&quot;,&quot;.&quot;,&quot;He&quot;,&quot;had&quot;,&quot;a&quot;,&quot;toy&quot;,&quot;box&quot;,&quot;.&quot;,&quot;He&quot;,&quot;had&quot;,&quot;a&quot;,&quot;toy&quot;,&quot;car&quot;,&quot;.&quot;,&quot;He&quot;,&quot;would&quot;,&quot;pretend&quot;,&quot;the&quot;,&quot;store&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;went&quot;,&quot;to&quot;,&quot;the&quot;,&quot;toy&quot;,&quot;.&quot;,&quot;He&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;touch&quot;,&quot;it&quot;,&quot;with&quot;,&quot;it&quot;,&quot;.&quot;,&quot;He&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;his&quot;,&quot;mom&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;walked&quot;,&quot;to&quot;,&quot;the&quot;,&quot;toy&quot;,&quot;.&quot;,&quot;He&quot;,&quot;went&quot;,&quot;to&quot;,&quot;play&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;big&quot;,&quot;,&quot;,&quot;blue&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;The&quot;,&quot;car&quot;,&quot;was&quot;,&quot;very&quot;,&quot;sad&quot;,&quot;.&quot;,&quot;The&quot;,&quot;car&quot;,&quot;loved&quot;,&quot;to&quot;,&quot;look&quot;,&quot;at&quot;,&quot;the&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;One&quot;,&quot;day&quot;,&quot;,&quot;,&quot;the&quot;,&quot;ball&quot;,&quot;started&quot;,&quot;to&quot;,&quot;play&quot;,&quot;.&quot;,&quot;He&quot;,&quot;went&quot;,&quot;for&quot;,&quot;his&quot;,&quot;car&quot;,&quot;.&quot;,&quot;He&quot;,&quot;felt&quot;,&quot;sad&quot;,&quot;.&quot;,&quot;The&quot;,&quot;car&quot;,&quot;felt&quot;,&quot;sad&quot;,&quot;or&quot;,&quot;lost&quot;,&quot;.&quot;]" data-astro-cid-r5v4z3ma></canvas><script type="module">var e=`400 14px "JetBrains Mono", Menlo, monospace`,t=.07,n=[[159,180,255],[168,230,237],[238,242,248]];for(let r of document.querySelectorAll(`.token-field`)){let i=JSON.parse(r.dataset.words??`[]`),a=r.getContext(`2d`),o=r.parentElement;if(!a||!o||!i.length)continue;let s=matchMedia(`(prefers-reduced-motion: reduce)`).matches,c=0,l=0,u=[],d=[],f=!0,p=0,m=0,h=0,g=null,_=()=>{let t=Math.min(devicePixelRatio||1,2);c=o.clientWidth,l=o.clientHeight,r.width=Math.round(c*t),r.height=Math.round(l*t),a.setTransform(t,0,0,t,0,0),a.font=e;let n=a.measureText(` `).width;u=[];for(let e=0;e*30<l+30;e++){let t=[],r=0,o=Math.floor(Math.random()*i.length);for(;r<c+200;){let e=i[o++%i.length],s=a.measureText(e).width;t.push({t:e,x:r,w:s}),r+=s+n*1.6}let s=(6+Math.random()*14)*(e%2?-1:1);u.push({toks:t,span:r,speed:s,off:Math.random()*r})}d=[];let s=o.querySelector(`[data-calm]`)?.getBoundingClientRect(),f=o.getBoundingClientRect();g=s?new DOMRect(s.x-f.x,s.y-f.y,s.width,s.height):null},v=()=>{a.clearRect(0,0,c,l),a.font=e,a.textBaseline=`middle`;let n=new Map;for(let e of d)n.set(`${e.row}:${e.tok}`,e);u.forEach((e,r)=>{let i=r*30+15,o=((e.off+m*e.speed)%e.span+e.span)%e.span;for(let s=-1;s<=0;s++)e.toks.forEach((l,u)=>{let d=l.x+o+s*e.span;if(d+l.w<0||d>c)return;let f=n.get(`${r}:${u}`);if(f){let e=(m-f.born)/1.8,n=t+.78*Math.max(0,1-e)**2;a.fillStyle=`rgb(${f.c.join(` `)} / ${n})`}else a.fillStyle=`rgb(171 173 176 / ${t})`;a.fillText(l.t,d,i)})}),a.globalCompositeOperation=`destination-in`;let r=a.createLinearGradient(0,0,0,l);if(r.addColorStop(0,`rgb(0 0 0 / 0)`),r.addColorStop(.18,`rgb(0 0 0 / 1)`),r.addColorStop(.82,`rgb(0 0 0 / 1)`),r.addColorStop(1,`rgb(0 0 0 / 0)`),a.fillStyle=r,a.fillRect(0,0,c,l),g){let e=g.x+g.width/2,t=g.y+g.height/2,n=Math.max(g.width,g.height)*.75;a.globalCompositeOperation=`destination-out`,a.save(),a.translate(e,t),a.scale(g.width/Math.max(g.width,g.height),g.height/Math.max(g.width,g.height));let r=a.createRadialGradient(0,0,0,0,0,n);r.addColorStop(0,`rgb(0 0 0 / 0.85)`),r.addColorStop(.65,`rgb(0 0 0 / 0.7)`),r.addColorStop(1,`rgb(0 0 0 / 0)`),a.fillStyle=r,a.fillRect(-n,-n,2*n,2*n),a.restore()}a.globalCompositeOperation=`source-over`},y=()=>{let e=Math.floor(Math.random()*u.length),t=u[e],r=((t.off+m*t.speed)%t.span+t.span)%t.span,i=e*30+15,a=e=>!!g&&e>g.x-40&&e<g.right+40&&i>g.y-20&&i<g.bottom+20,o=t.toks.map((e,t)=>[e.x+r,t]).filter(([e])=>e>0&&e<c-60&&!a(e)),s=o.length?o:t.toks.map((e,n)=>[e.x+r-t.span,n]).filter(([e])=>e>0&&e<c-60&&!a(e));if(!s.length)return;let[,l]=s[Math.floor(Math.random()*s.length)];d.push({row:e,tok:l,born:m,c:n[Math.floor(Math.random()*n.length)]})},b=e=>{if(!f||document.hidden)p=0;else{for(p&&(m+=Math.min(e-p,100)/1e3),p=e;m>=h;)y(),h=m+.12+Math.random()*.25;d=d.filter(e=>m-e.born<1.8),v(),requestAnimationFrame(b)}},x=()=>{s||!f||document.hidden||p||requestAnimationFrame(b)};document.fonts.ready.then(()=>{if(_(),s){for(let e=0;e<14;e++)y();v();return}new IntersectionObserver(([e])=>{f=e.isIntersecting,x()}).observe(o),document.addEventListener(`visibilitychange`,x);let e=0;new ResizeObserver(()=>{clearTimeout(e),e=window.setTimeout(()=>{(o.clientWidth!==c||o.clientHeight!==l)&&_()},150)}).observe(o)})}</script><div class="wrap" data-astro-cid-4ikiqo7u><div class="intro" data-calm data-astro-cid-4ikiqo7u><ul class="tags" data-astro-cid-4ikiqo7u><li data-astro-cid-4ikiqo7u>Episode 20</li><li data-astro-cid-4ikiqo7u>21 min</li></ul><h1 class="display grad" data-astro-cid-4ikiqo7u>LLM tool calling from scratch: a calculator</h1><p class="sub" data-astro-cid-4ikiqo7u>We fine-tune the model we pretrained on the web to call a calculator, in plain text, and measure how often it calls it right, on questions asked the way training asks and in new ways, with the calculator and without it.</p><p class="watch" data-astro-cid-4ikiqo7u><a href="https://www.youtube.com/watch?v=UrlqjWEuYH4" data-astro-cid-4ikiqo7u>Watch on YouTube</a></p></div></div></header><div class="wrap layout" data-astro-cid-kpaidhwy><main data-astro-cid-kpaidhwy><div class="player" data-player="UrlqjWEuYH4" data-title="LLM tool calling from scratch: a calculator | Minimum Viable GPT #20" data-astro-cid-g2mknjow><div class="screen" data-astro-cid-g2mknjow><div class="frame" data-astro-cid-g2mknjow><button type="button" class="start" aria-label="Play LLM tool calling from scratch: a calculator | Minimum Viable GPT #20" data-astro-cid-g2mknjow><img src="https://i.ytimg.com/vi/UrlqjWEuYH4/maxresdefault.jpg" alt="" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/UrlqjWEuYH4/hqdefault.jpg'" data-astro-cid-g2mknjow><svg class="play" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="currentColor"></rect><path d="M26 20v24l19-12z" fill="var(--on-accent)"></path></svg></button></div><button type="button" class="close" aria-label="Close the mini player" data-astro-cid-g2mknjow><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button></div></div><script type="module">var e=`https://www.youtube-nocookie.com`,t=document.querySelector(`[data-player]`),n=t?.querySelector(`.screen`),r=t?.querySelector(`.frame`);if(t&&n&&r){let i=document.querySelector(`[data-mini-slot]`),a=(t,n,r=[])=>t.contentWindow?.postMessage(JSON.stringify({event:`command`,func:n,args:r}),e),o=!0,s=!1,c=!1,l=``,u=()=>{if(!s)return;let e=i?.getClientRects().length?i.getBoundingClientRect():null,t=e?`${e.left},${e.top},${e.width},${e.height}`:`corner`;t!==l&&(l=t,n.classList.toggle(`corner`,!e),e?Object.assign(n.style,{left:`${e.left}px`,top:`${e.top}px`,width:`${e.width}px`,height:`${e.height}px`}):n.removeAttribute(`style`)),requestAnimationFrame(u)},d=e=>{s=e,l=``,document.documentElement.classList.toggle(`mini-docked`,e),t.classList.toggle(`away`,e),n.classList.toggle(`docked`,e),e?requestAnimationFrame(u):(n.classList.remove(`corner`),n.removeAttribute(`style`))},f=()=>{let e=!o&&!c;e!==s&&d(e)},p=n=>{let i=r.querySelector(`iframe`);if(i){a(i,`seekTo`,[n,!0]),a(i,`playVideo`);return}let o=document.createElement(`iframe`),s=new URLSearchParams({autoplay:`1`,enablejsapi:`1`,rel:`0`,start:String(Math.floor(n))});o.src=`${e}/embed/${t.dataset.player}?${s}`,o.title=t.dataset.title??``,o.allow=`autoplay; encrypted-media; picture-in-picture; fullscreen`,o.allowFullscreen=!0,r.replaceChildren(o)};new IntersectionObserver(([e])=>{o=e.intersectionRatio>=.5,o&&(c=!1),f()},{threshold:[0,.5,1]}).observe(t),t.querySelector(`.start`)?.addEventListener(`click`,()=>p(0)),n.querySelector(`.close`)?.addEventListener(`click`,()=>{let e=r.querySelector(`iframe`);e&&a(e,`pauseVideo`),c=!0,f()}),document.addEventListener(`click`,e=>{let t=e.target.closest(`a[data-seek]`);!t||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||(e.preventDefault(),c=!1,p(Number(t.dataset.seek)),f())})}</script><p class="colab" data-astro-cid-5xslxzzu><a href="https://colab.research.google.com/github/nenuadrian/mvGPT/blob/main/notebooks/ep020-tools.ipynb" title="Run this episode's code in a Colab notebook" data-astro-cid-5xslxzzu><img src="/colab-badge.svg" alt="Open in Colab" width="140" height="24" data-astro-cid-5xslxzzu></a></p><p class="description" data-astro-cid-kpaidhwy>Our web model writes fluent text but can&#39;t do arithmetic, so today we teach it to call a calculator, as Toolformer did, writing the call as plain text for the program running it to fill in. We generate fifty thousand questions and fine-tune for ten minutes on the laptop, with the questions and the calculator&#39;s results left out of the loss. Then we measure the calls on held-out questions, worded the way training words them and in new ways, with the calculator and without it.</p><p class="topics muted" data-astro-cid-kpaidhwy>Topics: <a href="/?topic=fine-tuning#episodes" data-astro-cid-kpaidhwy>Fine-tuning</a>, <a href="/?topic=agents#episodes" data-astro-cid-kpaidhwy>Agents</a></p><section aria-labelledby="code" data-astro-cid-kpaidhwy><h2 class="section-title" id="code" data-astro-cid-kpaidhwy>The code</h2><p class="muted" data-astro-cid-kpaidhwy>Each step on screen is a tag in <a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-kpaidhwy>the code&#39;s repository</a>. The code at the end of the episode is <a href="https://github.com/nenuadrian/mvGPT/tree/ep020/end" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep020/end</code></a>.</p><ol class="steps" data-astro-cid-kpaidhwy><li data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=222s" data-seek="222" data-astro-cid-kpaidhwy>3:42</a><span class="step" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep020/step-1</code><span class="muted" data-astro-cid-kpaidhwy>Calling a tool</span></span><span class="links" data-astro-cid-kpaidhwy><a href="https://github.com/nenuadrian/mvGPT/tree/ep020/step-1" data-astro-cid-kpaidhwy>Browse</a><a href="https://github.com/nenuadrian/mvGPT/compare/ep019/end...ep020/step-1" data-astro-cid-kpaidhwy>Changes</a></span></li><li data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=397s" data-seek="397" data-astro-cid-kpaidhwy>6:37</a><span class="step" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep020/step-2</code><span class="muted" data-astro-cid-kpaidhwy>Fifty thousand questions</span></span><span class="links" data-astro-cid-kpaidhwy><a href="https://github.com/nenuadrian/mvGPT/tree/ep020/step-2" data-astro-cid-kpaidhwy>Browse</a><a href="https://github.com/nenuadrian/mvGPT/compare/ep020/step-1...ep020/step-2" data-astro-cid-kpaidhwy>Changes</a></span></li><li data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=659s" data-seek="659" data-astro-cid-kpaidhwy>10:59</a><span class="step" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep020/step-3</code><span class="muted" data-astro-cid-kpaidhwy>Fine-tuning</span></span><span class="links" data-astro-cid-kpaidhwy><a href="https://github.com/nenuadrian/mvGPT/tree/ep020/step-3" data-astro-cid-kpaidhwy>Browse</a><a href="https://github.com/nenuadrian/mvGPT/compare/ep020/step-2...ep020/step-3" data-astro-cid-kpaidhwy>Changes</a></span></li><li data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=852s" data-seek="852" data-astro-cid-kpaidhwy>14:12</a><span class="step" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep020/step-4</code><span class="muted" data-astro-cid-kpaidhwy>Measuring the calls</span></span><span class="links" data-astro-cid-kpaidhwy><a href="https://github.com/nenuadrian/mvGPT/tree/ep020/step-4" data-astro-cid-kpaidhwy>Browse</a><a href="https://github.com/nenuadrian/mvGPT/compare/ep020/step-3...ep020/step-4" data-astro-cid-kpaidhwy>Changes</a></span></li><li data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=1129s" data-seek="1129" data-astro-cid-kpaidhwy>18:49</a><span class="step" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep020/step-5</code><span class="muted" data-astro-cid-kpaidhwy>Measuring the calls</span></span><span class="links" data-astro-cid-kpaidhwy><a href="https://github.com/nenuadrian/mvGPT/tree/ep020/step-5" data-astro-cid-kpaidhwy>Browse</a><a href="https://github.com/nenuadrian/mvGPT/compare/ep020/step-4...ep020/step-5" data-astro-cid-kpaidhwy>Changes</a></span></li></ol></section><section aria-labelledby="transcript" data-astro-cid-kpaidhwy><details class="transcript" open data-astro-cid-kpaidhwy><summary data-astro-cid-kpaidhwy><h2 class="section-title" id="transcript" data-astro-cid-kpaidhwy>Transcript</h2></summary><h3 data-astro-cid-kpaidhwy>Intro</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4" data-seek="0" data-astro-cid-kpaidhwy>0:00</a> Hello and welcome back to episode twenty, where we&#39;re going to teach the model we pretrained on the web to use a tool, a calculator, which it calls when a question needs one. Let&#39;s begin with a quick look at where we&#39;re going to be by the end of the episode.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=14s" data-seek="14" data-astro-cid-kpaidhwy>0:14</a> By the end of today, our model answers a question like this one, about a café selling three hundred and eighty-six cups of coffee a day for twenty-nine days, by calling a calculator. It writes the call, the calculator works out eleven thousand one hundred and ninety-four, and the model answers with it.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=33s" data-seek="33" data-astro-cid-kpaidhwy>0:33</a> On the website of the series, you can find more information about the project. The code is open source on GitHub, tagged at each step of each episode, so that you can follow along, and the docs get a page on tool use today. And each episode has a page here as well, with its chapters and its code.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=52s" data-seek="52" data-astro-cid-kpaidhwy>0:52</a> Now, before we get to today&#39;s work, let&#39;s quickly go over what we did last time. We pretrained a model of about a hundred and ten million parameters on educational web pages, for a night, on one GPU that we rented for under four dollars. On HellaSwag, it got about as many right as GPT-2 small. It writes fluent pages, but what it writes often isn&#39;t true, and arithmetic is beyond it: with three worked examples in front of it, it gets none of fifty two-digit additions right. So today, we don&#39;t teach our model arithmetic: we teach it to hand the arithmetic to a calculator.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=88s" data-seek="88" data-astro-cid-kpaidhwy>1:28</a> Today, we start with how a model calls a tool: it writes the call as text, and the program running the model watches for it. We write a calculator that takes numbers and arithmetic, and refuses anything else, as the model&#39;s calls are code we run. We generate fifty thousand questions, with held-out ones worded in ways training doesn&#39;t use. We fine-tune for ten minutes on the laptop, with the questions and the calculator&#39;s results left out of the loss. And we measure the calls on the held-out questions, with the calculator and with it turned off. All right, let&#39;s get started with how a language model calls a tool.</p><h3 data-astro-cid-kpaidhwy>Calling a tool</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=125s" data-seek="125" data-astro-cid-kpaidhwy>2:05</a> Toolformer: Language Models Can Teach Themselves to Use Tools, from 2023, is by Timo Schick and others at Meta. Its abstract starts from a paradox: language models solve new tasks from a few examples, and still struggle with arithmetic or looking up a fact, where much simpler programs do well. Toolformer is trained to decide which tool to call, when, with what arguments, and how to use the result, for a calculator, a question answering system, a search engine, a translator and a calendar. Figure one shows its calls, written in square brackets in the middle of the text: the name of the tool, its arguments, then an arrow and the result. The model writes the call, the program running it fills in the result, and the model carries on with it in its context. Toolformer made its training calls by sampling them from the model and keeping the ones that helped, on a model of six point seven billion parameters. Ours is far smaller, so we generate its training calls with a program.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=180s" data-seek="180" data-astro-cid-kpaidhwy>3:00</a> Our calls are plain text too, in a format of our own. The model writes two angle brackets, calc, the arithmetic, and two closing brackets. The program generating the text checks each new token, and when the call closes, it gives the arithmetic to the calculator, and appends an equals sign and the result to the text, as if the model had written them. Then the model carries on writing, with the result in its context, so its answer can use it. Plain text keeps the vocabulary as it is, and the model loads in Hugging Face&#39;s libraries as before. Bigger models use tokens of their own for this, like Llama 3.1&#39;s python tag, and the idea is the one here: text that the program watches for.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=223s" data-seek="223" data-astro-cid-kpaidhwy>3:43</a> A new file, tools dot py, holds the calculator and the loop that runs it. It imports ast, Python&#39;s module for reading Python into a syntax tree, operator, for the four operations as functions, re and torch, and our KV cache. The comment at the top says how a call works: plain text the model writes, with the program running it watching for the closing brackets, so the vocabulary doesn&#39;t change. Open and close are the markers, call is a regular expression for a whole call, and ops maps the syntax tree&#39;s four operations to the functions that do them. Calculate is the calculator, and it has a job to be careful with. The model writes its calls, and we run them, so we can&#39;t hand them to Python&#39;s eval, which would run any code at all. Instead, value walks the syntax tree, and takes a number, one of the four operations on two values, or a minus sign in front of one, and anything else raises an error. So powers, function calls and names are refused, and a call can&#39;t do more than arithmetic. An expression over a hundred characters is refused too. Ast parse reads the expression, and a syntax error, a refusal, or a division by zero all come back as the word error, which the model then reads. Show writes a result the way our examples do: whole numbers without a decimal point, others to four places, and result text puts an equals sign in front. Generate with tools writes after the prompt&#39;s ids, a token at a time, and returns the new ids, along with the calls. The prompt goes through the model once, filling the KV cache. Then, at each step, the next token is the most likely one, or a sampled one with a temperature, and end of text stops it. The text so far is decoded, and when it ends with the opening marker, opened remembers where the arithmetic starts. When it ends with the closing brackets, the call is closed, and what&#39;s between the markers goes to the calculator. Its result is encoded and added to the output, and to the tokens the model reads next, along with its own token. With use tool false, the call is noted, and the model goes on to write its own result, which is how we&#39;ll see what it does without the calculator. Each step runs the newest tokens through the model, with the cache holding the keys and values of the ones before. Main asks a model a question from the command line, in the format of our examples, and prints the answer and each call. The tests check the calculator&#39;s arithmetic, from a multiplication to a division with decimals, and what it refuses: an import, a power, a function, a name, a division by zero. Scripted stands in for a model, writing the tokens of a script one per step, so the loop can be tested without training anything. With the calculator, the result goes in after the call, and the model reads the result&#39;s tokens with the closing bracket, in one step, and without it, the model writes its own. And a small real model runs through the loop without an error.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=392s" data-seek="392" data-astro-cid-kpaidhwy>6:32</a> All five tests pass, in about a second, without a trained model.</p><h3 data-astro-cid-kpaidhwy>Fifty thousand questions</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=397s" data-seek="397" data-astro-cid-kpaidhwy>6:37</a> There&#39;s no dataset of questions for our calculator, so tool data dot py generates them. Train is fifty thousand examples, held out is two hundred per held-out set, and share is how the training examples divide up: half arithmetic, a quarter word problems, a tenth questions with numbers that need no call, and the rest web pages. Ask holds ten ways of asking for each operation, from what is a plus b, to find the sum, to a plus b equals question mark. Ask held out has two more for each, which training doesn&#39;t use, like what is the total of a and b, or how many times does b go into a. They tell us whether the model calls the calculator because it understood the question, or because it recognises the wording. Word holds the word problems: the question, the call&#39;s arithmetic, and the sentence that answers it, with r for the result. A box holds a pencils, how many pencils are in b boxes, is b times a. Some take two operations, like a pack of cards with some lost. The last six are held out, on things training&#39;s problems don&#39;t mention, like a baker, a ferry and a garden. Numbers holds questions that mention numbers but need no calculator, which is bigger, which comes first, and one more wording is held out. Number picks a number with a given number of digits. Question puts a question into our format: question, colon, the question, and answer on the next line. With call builds an example from a question, its arithmetic and its sentence, and computes the result with our calculator. Its comment explains the segments: the question and the result are text the model is given, and the call and the answer are what it learns to write. Arithmetic picks an operation and two numbers, of one to six digits each. Most divisions are made to come out whole, as most questions people ask do. Word problem fills a problem with numbers from two up to four digits, so no sentence says one cars, keeps a subtraction from going below zero, and makes divisions come out whole. Number question fills a question that needs no call. Web pages takes pages from the last FineWeb-Edu file, after the held-out pages, a file pretraining didn&#39;t read, each cut to its first sentences. They keep the model writing text, and teach it that text doesn&#39;t call for a calculator. Build makes it all with one seed, so each run gets those examples again, and shuffles the training set. Seen collects the training questions, so no held-out question repeats one. Then the five held-out sets: the training questions with new numbers, arithmetic asked in the held-out ways, the held-out word problems, questions that need no call, and the start of web pages, cut in the middle of a sentence, for the model to carry on. Each set is written as JSON, a line per example, with how many of each kind it has. Load reads a set back, and show prints an example with the text the model doesn&#39;t learn in square brackets.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=568s" data-seek="568" data-astro-cid-kpaidhwy>9:28</a> Tool data dot py writes fifty thousand training examples, about twenty-five thousand of them arithmetic and thirteen thousand word problems, and two hundred in each held-out set, in a few seconds, and prints one example of each kind. The question and the calculator&#39;s result are in square brackets, as the model is given them, and the call and the sentence after it are what it learns to write. The question with numbers ends without a call, and the web page is a page.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=596s" data-seek="596" data-astro-cid-kpaidhwy>9:56</a> Before fine-tuning, we measure the pretrained model, with three worked examples in front of each question, which is the most a pretrained model can go on. With the calculator available, it calls it on about thirty-four percent of the training-style questions, and none of those calls is right. It gets about three point five percent of the answers, and as many without the calculator, as it doesn&#39;t use it. On the questions that need no call, it calls anyway about seventeen percent of the time. The wrong calls show why: it writes calc and one of the numbers, or repeats a number from the question as its answer, or repeats the question. It has picked up the look of a call from the examples, but not what goes in one.</p><h3 data-astro-cid-kpaidhwy>Fine-tuning</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=638s" data-seek="638" data-astro-cid-kpaidhwy>10:38</a> As in episode three&#39;s fine-tuning, the loss leaves out the question, which the model is given. It learns to write the call, which is the part that&#39;s its job. The result is left out too, as the calculator writes it, and a model trained to predict it would be learning arithmetic, the thing we&#39;re handing over. And it learns the sentence after, which uses the result.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=660s" data-seek="660" data-astro-cid-kpaidhwy>11:00</a> Tool SFT dot py follows sft dot py from episode three. The batch is thirty-two examples, and the learning rate is ten to the minus four. Its comment gives the reasons: half of sft dot py&#39;s, for a model eight times the size, and a narrow task that shouldn&#39;t push out the rest of what it knows. Demo is a held-out word problem the model answers at each evaluation. Encode turns an example into ids, segment by segment, and for each id, whether the model learns to write it. Each segment is encoded on its own, which gives the tokens that encoding the whole text would, as each segment starts at a space or a punctuation mark. Learned repeats the segment&#39;s flag once for each of its tokens, so ids and learned stay side by side, and both are cut to the context window, plus one, as a window of inputs needs one more token for its last target. Our examples are far shorter than a thousand and twenty-four tokens, so the cut is there for safety. Make batch pads the examples to the longest one in the batch. Each position predicts the next token, which counts if it&#39;s one the model writes, and the others keep minus one, which the loss skips. The inputs are the ids without the last one, and targets are the ids from the second on. NumPy&#39;s where keeps a target where learned is true, and puts minus one everywhere else, in a single line, for the whole row. So a question&#39;s last position predicts the call&#39;s first token, which counts, and the call&#39;s last position, the closing brackets, predicts the calculator&#39;s equals sign, which doesn&#39;t. Estimate loss measures all the held-out examples, in order, so each evaluation measures those ones again. Main loads the model we pretrained on the web, encodes the training examples and the seen held-out set, and counts the tokens there are to learn. The optimiser is AdamW, with pretraining&#39;s settings for weight decay. Each evaluation measures the held-out loss, and answers the demo with the calculator. The loop draws random batches of thirty-two, as sft dot py does: the forward pass gives the loss over the tokens that count, then zero grad, backward, the gradients clipped to a norm of one, and the optimiser&#39;s step. Each fifty steps, it prints the batch&#39;s loss and the minutes so far, and each two hundred and fifty, it evaluates, with the model put back in training mode after. At the end, a last evaluation, the model is saved to checkpoints, tools, and it prints the steps, the examples it saw, and the minutes.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=810s" data-seek="810" data-astro-cid-kpaidhwy>13:30</a> Then we fine-tune for ten minutes on the laptop. There are one million five hundred thousand tokens to learn, as most of each example is given. At step zero, the pretrained model treats the word problem as the start of a page, and carries on with it. Within two hundred and fifty steps, it calls the calculator with a hundred and twenty-eight times thirty-seven, and answers with the result, on a word problem training didn&#39;t include. The batch loss jumps around, as some batches hold more web pages, which are harder to predict than a call. At the end, after five hundred steps, it has seen sixteen thousand examples, about a third of the training set, and its last answer uses the right result, though it says trips where it means people.</p><h3 data-astro-cid-kpaidhwy>Measuring the calls</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=853s" data-seek="853" data-astro-cid-kpaidhwy>14:13</a> Tool eval dot py measures the calls the model makes. Number finds numbers in text, whole or with decimals, and call sets are the three held-out sets whose questions need a call. After call takes the answer the model writes in words, after its call and the result, as the result is the calculator&#39;s, and with no call, it&#39;s all of the text. Score checks one answer, by the kind of question. On a web page, all that counts is whether the model called. On a question that needs no call, it&#39;s right if there&#39;s no call and the first number is the answer. On the others, the call is right if our calculator gets the answer from its arithmetic, and the answer is right if the sentence after it has the answer in it. Run answers a set&#39;s questions, with the calculator or without it, and with examples in front, for a pretrained model. A pretrained model carries on with another question after its answer, so the answer ends before the next question. Main takes a checkpoint, and dash dash shots, which puts three worked examples from the training set in front of each question, for the pretrained model: the first arithmetic question, the first word problem and the first question that needs no call, each written out in full, with its call and result, and a blank line after it. A pretrained model has no idea what our format is, and examples are how we show it. For each set, it answers with the calculator, and for the call sets, again without it. By the length of the longest number in the question, it keeps the right answers both ways. Rate is the share of rows where a key is true. By digits is a default dictionary of two lists for each length, the answers with the calculator and without it, and each length becomes a row with both rates and how many examples it has. The table prints a line per set: the calls, the right calls, the right answers, and without the tool, while the sets that need no call print what applies to them. Each set keeps three of its answers as samples, and three of its wrong calls, as the question and what the model wrote up to the closing brackets. After the table, it prints two wrong calls from each call set, and saves it all to results, as tools, then the model&#39;s name, dot JSON.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=984s" data-seek="984" data-astro-cid-kpaidhwy>16:24</a> Then we measure the model we fine-tuned, in the way we measured the other. On the training&#39;s kinds of questions, with numbers it hasn&#39;t seen, it calls each time, and about ninety-nine point five percent of the answers are right. With the calculator off, about two percent are: the model hasn&#39;t learned arithmetic, it has learned to hand it over. Asked in the held-out ways, it still calls each time, and about fifty-four point five percent of the calls are right, and on the held-out word problems, about forty percent. On questions that need no call, it calls about five point five percent of the time, and gets about seventy-two percent right, and on web pages, it carries on writing, with a call in about one in two hundred. The wrong calls it prints show where it fails. Its one miss on the training&#39;s questions is a nine-digit number, copied with a digit missing. The others pick the wrong operation: shared equally among thirty-seven becomes a subtraction, and lots of, or marbles, go into the call as words, which the calculator refuses. It copies the numbers well, and it knows when to call, but it picks the operation from the wording it learned, and not from what the question means.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=1051s" data-seek="1051" data-astro-cid-kpaidhwy>17:31</a> Tools dot py asks it a question of our own: forty-eight thousand two hundred and thirteen times nine hundred and seven. It calls, and answers forty-three million, seven hundred and twenty-nine thousand, one hundred and ninety-one, which is right. With dash dash no tool, the call goes unanswered. The model writes the call a second time, then says the answer is nine hundred and seven, a number from the question. Without the result, it doesn&#39;t know what to say. And one of the held-out word problems, about a baker: it calls with a hundred and forty-four times six, and answers eight hundred and sixty-four loaves.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=1089s" data-seek="1089" data-astro-cid-kpaidhwy>18:09</a> Side by side, ten minutes of fine-tuning took the pretrained model from about three point five percent of these answers to about ninety-nine point five on questions worded the way training words them. On wordings it hasn&#39;t seen, it gets about half, and on new word problems, about two in five. The model learned to call, and learned our fifty or so wordings well, and that&#39;s as far as ten minutes and fifty thousand generated questions go.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=1115s" data-seek="1115" data-astro-cid-kpaidhwy>18:35</a> By the length of the numbers, on the training&#39;s kinds of questions: with the calculator, the answers stay right from two digits to six, as copying a number is one job at any length. Without it, the model gets a few small ones right, and none of the five-digit ones.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=1130s" data-seek="1130" data-astro-cid-kpaidhwy>18:50</a> Last, the docs get a page on tool use, with the format and the calculator, the generated questions and their held-out sets, the mask, and the results, with the calculator and without it. It goes at the end of the navigation, after pretraining on the web.</p><h3 data-astro-cid-kpaidhwy>Wrap-up</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=1144s" data-seek="1144" data-astro-cid-kpaidhwy>19:04</a> Now, let&#39;s go over what&#39;s real here, and what&#39;s scaled down. The loop is real: a model writes a call, the program running it runs the tool and puts the result in the context, and the model carries on, which is how assistants call tools. So is leaving the tool&#39;s output out of the loss. The scale of it isn&#39;t, not by a long way. We have one tool, and questions generated from about fifty wordings, while an assistant chooses between many tools, described to it in its prompt, after fine-tuning on a far wider range of requests. And our markers are plain text, where those models use tokens of their own and arguments as JSON. Our model calls the calculator well when asked the way it learned, and half as well when asked another way.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=1188s" data-seek="1188" data-astro-cid-kpaidhwy>19:48</a> So, today we taught our model to call a tool. It writes a call as plain text, and the program running it watches for the closing brackets. Our calculator reads the call as a syntax tree and takes arithmetic alone, so a call can&#39;t run other code. We generated fifty thousand questions, with held-out sets worded in new ways. Ten minutes of fine-tuning on the laptop, with the questions and the results left out of the loss, took the answers from about three point five percent to about ninety-nine point five on the training&#39;s kinds of questions, about fifty-five on new wordings and forty on new word problems. With the calculator off, it gets almost none right: it learned to hand the arithmetic over.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=1230s" data-seek="1230" data-astro-cid-kpaidhwy>20:30</a> If you&#39;d give a small model a tool of its own, let me know in the comments which one, and what it should learn to ask it. And if you&#39;d like to follow along, subscribe to the channel. I hope you find this useful, and thanks for watching.</p></details></section></main><aside aria-labelledby="chapters" data-astro-cid-kpaidhwy><div class="mini-slot" data-mini-slot data-astro-cid-kpaidhwy></div><h2 class="section-title" id="chapters" data-astro-cid-kpaidhwy>Chapters</h2><ol class="chapters" data-astro-cid-kpaidhwy><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=UrlqjWEuYH4" data-seek="0" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>0:00</span><span data-astro-cid-kpaidhwy>Intro</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=125s" data-seek="125" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>2:05</span><span data-astro-cid-kpaidhwy>Calling a tool</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=397s" data-seek="397" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>6:37</span><span data-astro-cid-kpaidhwy>Fifty thousand questions</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=637s" data-seek="637" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>10:37</span><span data-astro-cid-kpaidhwy>Fine-tuning</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=852s" data-seek="852" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>14:12</span><span data-astro-cid-kpaidhwy>Measuring the calls</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=UrlqjWEuYH4&amp;t=1144s" data-seek="1144" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>19:04</span><span data-astro-cid-kpaidhwy>Wrap-up</span></a></li></ol></aside></div><nav class="wrap pager" aria-label="Episodes" data-astro-cid-kpaidhwy><a class="prev" href="/ep019-web/" data-astro-cid-kpaidhwy><span class="muted" data-astro-cid-kpaidhwy>← Episode 19</span><span data-astro-cid-kpaidhwy>Pretraining on the web: a GPT overnight</span></a><a class="next" href="/ep021-agent/" data-astro-cid-kpaidhwy><span class="muted" data-astro-cid-kpaidhwy>Episode 21 →</span><span data-astro-cid-kpaidhwy>AI agent from scratch, with subagents</span></a></nav><script type="module">var e=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5].map(e=>(e+.5)/16),t=(e,t,n=0)=>{let r=Math.sin(e*127.1+t*311.7+n*74.7)*43758.5453;return r-Math.floor(r)},n=e=>e*e*(3-2*e);function r(e,r){let i=Math.floor(e),a=Math.floor(r),o=n(e-i),s=n(r-a),c=t(i,a),l=t(i+1,a),u=t(i,a+1),d=t(i+1,a+1);return c+(l-c)*o+(u-c)*s+(c-l-u+d)*o*s}function i(e,t){let n=0,i=.5;for(let a=0;a<4;a++)n+=i*r(e,t),e=e*2.03+17.1,t=t*2.03+9.2,i*=.5;return n/.9375}var a=(e,t,r)=>n(Math.max(0,Math.min(1,(e-t)/(r-t)))),o=(e,t)=>e===`left`?.1+.9*a(t,.35,.8):e===`center`?.08+.92*a(Math.abs(t-.5)*2,.5,.95):1,s=e=>3+e*7.3;function c({cols:t,rows:n,shades:r,seed:a=0,calm:c=`even`,t:l=s(a)}){let u=t/n,d=new Uint8Array(t*n);for(let s=0;s<n;s++)for(let f=0;f<t;f++){let p=f/t*u*1.15+a*13.7,m=s/n*1.15+a*5.3,h=i(p+l*.04,m-l*.02),g=i(p+4*h+l*.06,m+4*h-l*.05),_=Math.max(0,Math.min(1,(g-.3)/.32)),v=Math.exp(-(((_-.62)/.05)**2)),y=(_**1.9+.7*v)*o(c,f/(t-1))*(r-1)+e[s%4*4+f%4]-.5;d[s*t+f]=Math.max(0,Math.min(r-1,Math.round(y)))}return d}function l({cols:e,rows:n,ember:r,seed:i=0,calm:a=`even`,t:s}){let c=[];for(let l=0;l<Math.round(e*n/90);l++){let u=1.2+2.8*t(l,1,i),d=n+8,f=Math.floor(d-(s*u+t(l,2,i)*d)%d)-4,p=Math.floor(t(l,3,i)*e+Math.sin(s*1.3+l)*1.5);f<0||f>=n||p<0||p>=e||o(a,p/e)<.7||t(l,4,i)>o(a,p/e)||t(l,Math.floor(s*8),i)<.18||c.push({x:p,y:f,color:r[l%r.length]})}return c}var u=120,d=36,f=20;function p(e,{field:t,ember:n}){let r=t.map(e=>[1,3,5].map(t=>parseInt(e.slice(t,t+2),16))),i=Number(e.dataset.seed??0),a=e.dataset.calm??`even`,o=document.createElement(`canvas`);o.className=`field-anim`,o.width=u,o.height=d,o.setAttribute(`aria-hidden`,`true`);let p=o.getContext(`2d`);if(!p)return;let m=p.createImageData(u,d),h=s(i),g=0,_=0,v=!1,y=!0,b=e=>{let o=c({cols:u,rows:d,shades:t.length,seed:i,calm:a,t:e});for(let e=0;e<o.length;e++){let[t,n,i]=r[o[e]];m.data.set([t,n,i,255],e*4)}p.putImageData(m,0,0);for(let t of l({cols:u,rows:d,ember:n,seed:i,calm:a,t:e-h}))p.fillStyle=t.color,p.fillRect(t.x,t.y,1,1)},x=e=>{!y||document.hidden?v=!1:(_&&(g+=Math.min(e-_,100)/1e3),_=e,b(h+g),setTimeout(()=>requestAnimationFrame(x),1e3/f))},S=()=>{v||!y||document.hidden||(v=!0,_=0,requestAnimationFrame(x))};b(h),e.prepend(o),new IntersectionObserver(([e])=>{y=e.isIntersecting,S()}).observe(e),document.addEventListener(`visibilitychange`,S)}var m=document.body.dataset.palette;if(m&&!matchMedia(`(prefers-reduced-motion: reduce)`).matches){let e=JSON.parse(m);document.querySelectorAll(`.field[data-seed]`).forEach(t=>p(t,e))}var h=document.querySelector(`.bar`);if(h){let e=window.scrollY,t=!1,n=()=>{t=!1;let n=Math.max(0,window.scrollY);h.classList.toggle(`solid`,n>0),n<=h.offsetHeight?(h.classList.remove(`away`),e=n):Math.abs(n-e)>4&&(h.classList.toggle(`away`,n>e),e=n)};window.addEventListener(`scroll`,()=>{t||(t=!0,requestAnimationFrame(n))},{passive:!0}),n(),new ResizeObserver(()=>document.documentElement.style.setProperty(`--bar-h`,`${h.offsetHeight}px`)).observe(h)}</script><footer class="foot" data-astro-cid-hkbrpulz><div class="wrap foot-inner" data-astro-cid-hkbrpulz><span data-astro-cid-hkbrpulz>mvGPT – Building a Minimum Viable GPT, A Language Model from Scratch</span><nav aria-label="Elsewhere" data-astro-cid-hkbrpulz><a href="/about/" data-astro-cid-hkbrpulz>About</a><a href="https://www.youtube.com/playlist?list=PLR-9Y4UPbi8n5DURn9WMeMu3V_EJ7GD-A" data-astro-cid-hkbrpulz>YouTube</a><a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>The code on GitHub</a><a href="https://nenuadrian.github.io/mvGPT/" data-astro-cid-hkbrpulz>Docs</a><a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>The models on Hugging Face</a><a href="/rss.xml" data-astro-cid-hkbrpulz>RSS</a></nav></div></footer></body></html>

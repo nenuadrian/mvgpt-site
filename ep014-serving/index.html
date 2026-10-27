@@ -1,0 +1,356 @@
+<!DOCTYPE html><html lang="en-GB" data-astro-cid-hkbrpulz><head><script async src="https://www.googletagmanager.com/gtag/js?id=G-F16ZZFP5E4"></script><script>window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', "G-F16ZZFP5E4");</script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Batching: serving a GPT to many users at once | mvGPT</title><meta name="description" content="We serve the model as an API in the shape of OpenAI's completions, measure it against a crowd of players from a game, write the stories for the requests that arrive together as a batch, and run it in Docker, with vLLM as the alternative."><link rel="canonical" href="https://mvgpt.nenuadrian.com/ep014-serving/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="alternate" type="application/rss+xml" title="mvGPT" href="/rss.xml"><link rel="sitemap" href="/sitemap.xml"><meta name="theme-color" content="#101215"><meta property="og:site_name" content="mvGPT"><meta property="og:type" content="video.episode"><meta property="og:title" content="Batching: serving a GPT to many users at once"><meta property="og:description" content="We serve the model as an API in the shape of OpenAI's completions, measure it against a crowd of players from a game, write the stories for the requests that arrive together as a batch, and run it in Docker, with vLLM as the alternative."><meta property="og:url" content="https://mvgpt.nenuadrian.com/ep014-serving/"><meta property="og:locale" content="en_GB"><meta property="og:image" content="https://i.ytimg.com/vi/6XGhd_83uwU/maxresdefault.jpg"><meta property="og:image:alt" content="Batching: serving a GPT to many users at once | Minimum Viable GPT #14"><meta name="twitter:card" content="summary_large_image"><style>@font-face{font-family:"aphrodite-display";src:url("/fonts/display-SpaceGrotesk-Medium.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"aphrodite-display";src:url("/fonts/display-SpaceGrotesk-Bold.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+:root{--bg:#101215;--bg-rgb:16 18 21;--surface:#14171b;--surface-2:#191d22;--line:#1f242b;--shadow:#272d36;--text:#e8ecf2;--heading:#eef2f8;--prose:#d8dce2;--muted:#a6aab0;--faint:#81868d;--ember:#9fb4ff;--ember-2:#a8e6ed;--on-ember:#14171b;--code:#9FB4FF;--font-display:"aphrodite-display", var(--font-ui);--font-ui:"Inter", -apple-system, 'Helvetica Neue', sans-serif;--font-mono:"JetBrains Mono", Menlo, monospace;--font-hand:"Caveat", 'Comic Sans MS', cursive}</style><style>/* mvGPT's website on top of aphrodite's: a near-black slate, a soft glow, titles in a periwinkle ->
+   white -> mint ramp, Space Grotesk throughout. aphrodite's own rules are in a cascade layer, so
+   these win over them; its markup is the same for both series, and site/components/ holds what's
+   mvGPT's alone (the brand, the heroes, the token field, the model to try, the player's icons). */
+
+/* Space Grotesk (public/fonts/, from @fontsource/space-grotesk 5.3.0, OFL). */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(/fonts/space-grotesk-latin-ext-400-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(/fonts/space-grotesk-latin-400-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(/fonts/space-grotesk-latin-ext-500-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(/fonts/space-grotesk-latin-500-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(/fonts/space-grotesk-latin-ext-600-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(/fonts/space-grotesk-latin-600-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(/fonts/space-grotesk-latin-ext-700-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(/fonts/space-grotesk-latin-700-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+:root {
+  --bg: #101215;
+  --bg-rgb: 16 18 21;
+  --surface: #15181c;
+  --surface-2: #1b1f24;
+  --line: #262a31;
+  --text: #e8ecf2;
+  --heading: var(--text);
+  --prose: #cfd3da;
+  --muted: #abadb0;
+  --faint: #7d8087;
+  --peri: #9fb4ff;
+  --white: #eef2f8;
+  --mint: #a8e6ed;
+  --brace: #8b9de8;
+  --ember: var(--peri);
+  --ember-2: var(--mint);
+  --on-ember: #101215;
+  --on-accent: #101215;
+  --code: var(--mint);
+  --grad: linear-gradient(100deg, var(--peri) 0%, var(--white) 50%, var(--mint) 100%);
+  --font-display: 'Space Grotesk', -apple-system, 'Helvetica Neue', sans-serif;
+  --font-ui: var(--font-display);
+  --font-mono: 'JetBrains Mono', Menlo, monospace;
+  /* The names our own parts use. */
+  --display: var(--font-display);
+  --ui: var(--font-ui);
+  --mono: var(--font-mono);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1.1;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: inherit;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  text-shadow: none;
+}
+
+/* Gradient title text, as on the thumbnails. */
+.grad {
+  width: fit-content;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Kicker tags: small mono labels in thin outlines, the first in periwinkle. */
+.tags {
+  gap: 8px;
+}
+.tags > *,
+.tags > :last-child {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: rgb(16 18 21 / 0.6);
+}
+.tags > :first-child {
+  border-color: rgb(159 180 255 / 0.45);
+  color: var(--peri);
+}
+
+/* A hero with the soft glow behind its title. */
+.glow {
+  position: relative;
+  isolation: isolate;
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+.glow::before {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  inset: -30% -10% -30% 25%;
+  background:
+    radial-gradient(closest-side at 55% 50%, rgb(159 180 255 / 0.1), transparent),
+    radial-gradient(closest-side at 75% 55%, rgb(168 230 237 / 0.06), transparent);
+  pointer-events: none;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+}
+
+/* The bar: in the page's flow, frosted, sliding away while scrolling down. */
+.bar,
+.bar.solid {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgb(16 18 21 / 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+  transition: transform 200ms ease;
+}
+.bar-inner {
+  padding-block: 14px;
+}
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+  text-shadow: none;
+}
+.curly {
+  color: var(--brace);
+  font-weight: 400;
+}
+.curly:first-child {
+  margin-right: 0.08em;
+}
+.curly:last-child {
+  margin-left: 0.08em;
+}
+.bar nav {
+  flex-wrap: nowrap;
+  gap: clamp(14px, 3vw, 28px);
+}
+.bar nav a {
+  color: var(--muted);
+}
+.bar nav a:hover {
+  color: var(--white);
+}
+@media (max-width: 480px) {
+  .bar nav {
+    gap: 12px;
+  }
+  .bar nav a {
+    white-space: nowrap;
+    font-size: 0.88rem;
+  }
+}
+
+/* Episode cards: lifting with a glow. */
+.card {
+  overflow: hidden;
+  box-shadow: none;
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+.card:hover {
+  border-color: rgb(159 180 255 / 0.5);
+  box-shadow: 0 10px 40px -12px rgb(159 180 255 / 0.25);
+  transform: translateY(-2px);
+}
+.card .placeholder {
+  background: radial-gradient(closest-side, rgb(159 180 255 / 0.1), transparent) var(--bg);
+}
+.card .placeholder span,
+.player.draft .display {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.card .placeholder span {
+  font-size: clamp(1.5rem, 3.4vw, 2rem);
+}
+.card .tags > * {
+  font-size: 0.78rem;
+  border-width: 1px;
+}
+.card h3 {
+  font-weight: 600;
+}
+
+/* The player: square, with a square play button, and a mini player that pops in. */
+.player {
+  overflow: hidden;
+  box-shadow: 0 20px 60px -24px rgb(159 180 255 / 0.25);
+}
+.player.draft {
+  background: radial-gradient(closest-side, rgb(159 180 255 / 0.1), transparent) var(--bg);
+}
+.player.draft p {
+  background: none;
+}
+.screen.docked {
+  z-index: 4;
+  animation: pop 180ms ease-out;
+}
+.docked .frame {
+  box-shadow:
+    0 18px 48px -12px rgb(0 0 0 / 0.7),
+    0 0 0 1px rgb(159 180 255 / 0.12);
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen.docked {
+    animation: none;
+  }
+}
+.close {
+  top: -11px;
+  right: -11px;
+}
+.corner .close {
+  right: -6px;
+}
+.close:hover {
+  color: var(--white);
+  border-color: rgb(159 180 255 / 0.5);
+}
+.close svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: square;
+}
+.start .play {
+  width: 76px;
+  height: 76px;
+  color: var(--peri);
+  filter: drop-shadow(0 6px 24px rgb(0 0 0 / 0.5));
+  transition:
+    color 150ms ease,
+    scale 150ms ease;
+}
+.docked .start .play {
+  width: 48px;
+  height: 48px;
+}
+.start:hover .play,
+.start:focus-visible .play {
+  color: var(--mint);
+  scale: 1.06;
+}
+
+/* An episode page: quiet times, thin rules. */
+.time {
+  color: var(--faint);
+}
+a.time:hover {
+  color: var(--mint);
+  text-decoration: none;
+}
+.chapters {
+  border-left-width: 1px;
+}
+.chapters a:hover {
+  box-shadow: -2px 0 0 var(--peri);
+}
+.pager a:hover {
+  border-color: rgb(159 180 255 / 0.5);
+}
+
+/* Square corners everywhere, form controls too, whatever the browser draws by default. */
+button,
+input,
+textarea,
+select {
+  border-radius: 0;
+}
+</style><script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoObject","name":"Batching: serving a GPT to many users at once | Minimum Viable GPT #14","description":"In this episode, we serve our model to many users at once, say the players of a game like nanoMMO from my other series, through an API in the shape of OpenAI's completions. Written one request at a time, the wait grows with the queue, so the server writes the stories of the waiting requests together, as a batch padded on the left. We measure it with a script that simulates a crowd of players, put the server in Docker, and look at vLLM as the alternative.","thumbnailUrl":["https://i.ytimg.com/vi/6XGhd_83uwU/maxresdefault.jpg"],"uploadDate":"2026-10-18","duration":"PT0H25M15S","embedUrl":"https://www.youtube.com/embed/6XGhd_83uwU","url":"https://www.youtube.com/watch?v=6XGhd_83uwU","hasPart":[{"@type":"Clip","name":"Intro","startOffset":0,"endOffset":54,"url":"https://www.youtube.com/watch?v=6XGhd_83uwU"},{"@type":"Clip","name":"A game is a crowd","startOffset":54,"endOffset":163,"url":"https://www.youtube.com/watch?v=6XGhd_83uwU&t=54s"},{"@type":"Clip","name":"A completions API","startOffset":163,"endOffset":551,"url":"https://www.youtube.com/watch?v=6XGhd_83uwU&t=163s"},{"@type":"Clip","name":"A crowd of players","startOffset":551,"endOffset":792,"url":"https://www.youtube.com/watch?v=6XGhd_83uwU&t=551s"},{"@type":"Clip","name":"Batching","startOffset":792,"endOffset":1240,"url":"https://www.youtube.com/watch?v=6XGhd_83uwU&t=792s"},{"@type":"Clip","name":"In Docker","startOffset":1240,"endOffset":1363,"url":"https://www.youtube.com/watch?v=6XGhd_83uwU&t=1240s"},{"@type":"Clip","name":"vLLM","startOffset":1363,"endOffset":1451,"url":"https://www.youtube.com/watch?v=6XGhd_83uwU&t=1363s"},{"@type":"Clip","name":"Wrap-up","startOffset":1451,"endOffset":1515,"url":"https://www.youtube.com/watch?v=6XGhd_83uwU&t=1451s"}]}</script><meta property="video:release_date" content="2026-10-18"><meta property="video:duration" content="1515"><meta property="video:tag" content="llm serving"><meta property="video:tag" content="batching"><meta property="video:tag" content="dynamic batching"><meta property="video:tag" content="continuous batching"><meta property="video:tag" content="vllm"><meta property="video:tag" content="openai api"><meta property="video:tag" content="completions api"><meta property="video:tag" content="http server"><meta property="video:tag" content="python"><meta property="video:tag" content="threading"><meta property="video:tag" content="kv cache"><meta property="video:tag" content="padding"><meta property="video:tag" content="attention mask"><meta property="video:tag" content="docker"><meta property="video:tag" content="pytorch"><meta property="video:tag" content="transformers"><meta property="video:tag" content="gpt"><meta property="video:tag" content="language model"><meta property="video:tag" content="llm"><meta property="video:tag" content="from scratch"><meta property="video:tag" content="mvgpt"><meta property="video:tag" content="nanommo"><link rel="stylesheet" href="/_astro/_id_.zno4cNTK.css"><style>.token-field[data-astro-cid-r5v4z3ma]{z-index:-1;pointer-events:none;width:100%;height:100%;position:absolute;inset:0}
+</style><link rel="stylesheet" href="/_astro/Base.dQHtagFK.css"></head><body data-palette="{&quot;field&quot;:[&quot;#101215&quot;,&quot;#14171b&quot;,&quot;#191d22&quot;,&quot;#1f242b&quot;,&quot;#272d36&quot;,&quot;#343b47&quot;,&quot;#48526a&quot;,&quot;#6a77a0&quot;],&quot;ember&quot;:[&quot;#9fb4ff&quot;,&quot;#a8e6ed&quot;]}" data-astro-cid-hkbrpulz><header class="bar" data-astro-cid-hkbrpulz><div class="wrap bar-inner" data-astro-cid-hkbrpulz><a class="brand" href="/" data-astro-cid-hkbrpulz><span class="curly">{</span><span class="grad">mvGPT</span><span class="curly">}</span></a><nav aria-label="Site" data-astro-cid-hkbrpulz><a class="episodes" href="/#episodes" data-astro-cid-hkbrpulz>Episodes</a><a href="/about/" data-astro-cid-hkbrpulz>About</a><a href="https://www.youtube.com/playlist?list=PLR-9Y4UPbi8n5DURn9WMeMu3V_EJ7GD-A" data-astro-cid-hkbrpulz>YouTube</a><a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>Code</a><a href="https://nenuadrian.github.io/mvGPT/" data-astro-cid-hkbrpulz>Docs</a><a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-hkbrpulz><span class="long" data-astro-cid-hkbrpulz>Hugging Face</span><abbr class="short" title="Hugging Face" data-astro-cid-hkbrpulz>HF</abbr></a></nav></div></header><header class="hero glow" data-astro-cid-4ikiqo7u><canvas class="token-field" aria-hidden="true" data-words="[&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;girl&quot;,&quot;named&quot;,&quot;Sam&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;was&quot;,&quot;scared&quot;,&quot;because&quot;,&quot;he&quot;,&quot;needed&quot;,&quot;to&quot;,&quot;go&quot;,&quot;.&quot;,&quot;He&quot;,&quot;thought&quot;,&quot;for&quot;,&quot;help&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;had&quot;,&quot;a&quot;,&quot;little&quot;,&quot;bit&quot;,&quot;a&quot;,&quot;long&quot;,&quot;bed&quot;,&quot;and&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;do&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;showed&quot;,&quot;it&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;said&quot;,&quot;,&quot;,&quot;\&quot;&quot;,&quot;Why&quot;,&quot;are&quot;,&quot;you&quot;,&quot;sad&quot;,&quot;?\&quot;&quot;,&quot;Tim&quot;,&quot;was&quot;,&quot;sad&quot;,&quot;and&quot;,&quot;strong&quot;,&quot;.&quot;,&quot;He&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;help&quot;,&quot;.&quot;,&quot;But&quot;,&quot;he&quot;,&quot;did&quot;,&quot;not&quot;,&quot;know&quot;,&quot;what&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;boy&quot;,&quot;named&quot;,&quot;Tim&quot;,&quot;.&quot;,&quot;He&quot;,&quot;loved&quot;,&quot;to&quot;,&quot;play&quot;,&quot;with&quot;,&quot;his&quot;,&quot;friends&quot;,&quot;.&quot;,&quot;One&quot;,&quot;day&quot;,&quot;,&quot;,&quot;Tim&quot;,&quot;saw&quot;,&quot;a&quot;,&quot;big&quot;,&quot;bird&quot;,&quot;in&quot;,&quot;his&quot;,&quot;park&quot;,&quot;.&quot;,&quot;He&quot;,&quot;was&quot;,&quot;a&quot;,&quot;big&quot;,&quot;,&quot;,&quot;white&quot;,&quot;dog&quot;,&quot;came&quot;,&quot;to&quot;,&quot;see&quot;,&quot;a&quot;,&quot;tree&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;and&quot;,&quot;Sam&quot;,&quot;went&quot;,&quot;to&quot;,&quot;play&quot;,&quot;with&quot;,&quot;the&quot;,&quot;tree&quot;,&quot;.&quot;,&quot;They&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;play&quot;,&quot;too&quot;,&quot;.&quot;,&quot;They&quot;,&quot;went&quot;,&quot;to&quot;,&quot;play&quot;,&quot;together&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;girl&quot;,&quot;named&quot;,&quot;Lucy&quot;,&quot;.&quot;,&quot;She&quot;,&quot;was&quot;,&quot;so&quot;,&quot;happy&quot;,&quot;.&quot;,&quot;She&quot;,&quot;had&quot;,&quot;lots&quot;,&quot;of&quot;,&quot;fun&quot;,&quot;.&quot;,&quot;And&quot;,&quot;then&quot;,&quot;,&quot;,&quot;she&quot;,&quot;saw&quot;,&quot;a&quot;,&quot;big&quot;,&quot;red&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;Lucy&quot;,&quot;was&quot;,&quot;lost&quot;,&quot;.&quot;,&quot;She&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;play&quot;,&quot;with&quot;,&quot;the&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;They&quot;,&quot;started&quot;,&quot;to&quot;,&quot;make&quot;,&quot;a&quot;,&quot;new&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;Lucy&quot;,&quot;was&quot;,&quot;happy&quot;,&quot;.&quot;,&quot;She&quot;,&quot;had&quot;,&quot;a&quot;,&quot;ball&quot;,&quot;,&quot;,&quot;and&quot;,&quot;it&quot;,&quot;was&quot;,&quot;very&quot;,&quot;happy&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;mouse&quot;,&quot;who&quot;,&quot;was&quot;,&quot;very&quot;,&quot;lonely&quot;,&quot;.&quot;,&quot;He&quot;,&quot;loved&quot;,&quot;to&quot;,&quot;play&quot;,&quot;together&quot;,&quot;,&quot;,&quot;and&quot;,&quot;the&quot;,&quot;mouse&quot;,&quot;would&quot;,&quot;fly&quot;,&quot;around&quot;,&quot;and&quot;,&quot;make&quot;,&quot;things&quot;,&quot;.&quot;,&quot;One&quot;,&quot;day&quot;,&quot;,&quot;,&quot;a&quot;,&quot;little&quot;,&quot;girl&quot;,&quot;named&quot;,&quot;Lucy&quot;,&quot;saw&quot;,&quot;a&quot;,&quot;big&quot;,&quot;rock&quot;,&quot;in&quot;,&quot;the&quot;,&quot;ground&quot;,&quot;.&quot;,&quot;She&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;wear&quot;,&quot;a&quot;,&quot;bird&quot;,&quot;.&quot;,&quot;there&quot;,&quot;lived&quot;,&quot;a&quot;,&quot;little&quot;,&quot;boy&quot;,&quot;named&quot;,&quot;Tim&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;had&quot;,&quot;a&quot;,&quot;toy&quot;,&quot;that&quot;,&quot;was&quot;,&quot;a&quot;,&quot;big&quot;,&quot;box&quot;,&quot;.&quot;,&quot;He&quot;,&quot;had&quot;,&quot;a&quot;,&quot;toy&quot;,&quot;box&quot;,&quot;.&quot;,&quot;He&quot;,&quot;had&quot;,&quot;a&quot;,&quot;toy&quot;,&quot;car&quot;,&quot;.&quot;,&quot;He&quot;,&quot;would&quot;,&quot;pretend&quot;,&quot;the&quot;,&quot;store&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;went&quot;,&quot;to&quot;,&quot;the&quot;,&quot;toy&quot;,&quot;.&quot;,&quot;He&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;touch&quot;,&quot;it&quot;,&quot;with&quot;,&quot;it&quot;,&quot;.&quot;,&quot;He&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;his&quot;,&quot;mom&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;walked&quot;,&quot;to&quot;,&quot;the&quot;,&quot;toy&quot;,&quot;.&quot;,&quot;He&quot;,&quot;went&quot;,&quot;to&quot;,&quot;play&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;big&quot;,&quot;,&quot;,&quot;blue&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;The&quot;,&quot;car&quot;,&quot;was&quot;,&quot;very&quot;,&quot;sad&quot;,&quot;.&quot;,&quot;The&quot;,&quot;car&quot;,&quot;loved&quot;,&quot;to&quot;,&quot;look&quot;,&quot;at&quot;,&quot;the&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;One&quot;,&quot;day&quot;,&quot;,&quot;,&quot;the&quot;,&quot;ball&quot;,&quot;started&quot;,&quot;to&quot;,&quot;play&quot;,&quot;.&quot;,&quot;He&quot;,&quot;went&quot;,&quot;for&quot;,&quot;his&quot;,&quot;car&quot;,&quot;.&quot;,&quot;He&quot;,&quot;felt&quot;,&quot;sad&quot;,&quot;.&quot;,&quot;The&quot;,&quot;car&quot;,&quot;felt&quot;,&quot;sad&quot;,&quot;or&quot;,&quot;lost&quot;,&quot;.&quot;]" data-astro-cid-r5v4z3ma></canvas><script type="module">var e=`400 14px "JetBrains Mono", Menlo, monospace`,t=.07,n=[[159,180,255],[168,230,237],[238,242,248]];for(let r of document.querySelectorAll(`.token-field`)){let i=JSON.parse(r.dataset.words??`[]`),a=r.getContext(`2d`),o=r.parentElement;if(!a||!o||!i.length)continue;let s=matchMedia(`(prefers-reduced-motion: reduce)`).matches,c=0,l=0,u=[],d=[],f=!0,p=0,m=0,h=0,g=null,_=()=>{let t=Math.min(devicePixelRatio||1,2);c=o.clientWidth,l=o.clientHeight,r.width=Math.round(c*t),r.height=Math.round(l*t),a.setTransform(t,0,0,t,0,0),a.font=e;let n=a.measureText(` `).width;u=[];for(let e=0;e*30<l+30;e++){let t=[],r=0,o=Math.floor(Math.random()*i.length);for(;r<c+200;){let e=i[o++%i.length],s=a.measureText(e).width;t.push({t:e,x:r,w:s}),r+=s+n*1.6}let s=(6+Math.random()*14)*(e%2?-1:1);u.push({toks:t,span:r,speed:s,off:Math.random()*r})}d=[];let s=o.querySelector(`[data-calm]`)?.getBoundingClientRect(),f=o.getBoundingClientRect();g=s?new DOMRect(s.x-f.x,s.y-f.y,s.width,s.height):null},v=()=>{a.clearRect(0,0,c,l),a.font=e,a.textBaseline=`middle`;let n=new Map;for(let e of d)n.set(`${e.row}:${e.tok}`,e);u.forEach((e,r)=>{let i=r*30+15,o=((e.off+m*e.speed)%e.span+e.span)%e.span;for(let s=-1;s<=0;s++)e.toks.forEach((l,u)=>{let d=l.x+o+s*e.span;if(d+l.w<0||d>c)return;let f=n.get(`${r}:${u}`);if(f){let e=(m-f.born)/1.8,n=t+.78*Math.max(0,1-e)**2;a.fillStyle=`rgb(${f.c.join(` `)} / ${n})`}else a.fillStyle=`rgb(171 173 176 / ${t})`;a.fillText(l.t,d,i)})}),a.globalCompositeOperation=`destination-in`;let r=a.createLinearGradient(0,0,0,l);if(r.addColorStop(0,`rgb(0 0 0 / 0)`),r.addColorStop(.18,`rgb(0 0 0 / 1)`),r.addColorStop(.82,`rgb(0 0 0 / 1)`),r.addColorStop(1,`rgb(0 0 0 / 0)`),a.fillStyle=r,a.fillRect(0,0,c,l),g){let e=g.x+g.width/2,t=g.y+g.height/2,n=Math.max(g.width,g.height)*.75;a.globalCompositeOperation=`destination-out`,a.save(),a.translate(e,t),a.scale(g.width/Math.max(g.width,g.height),g.height/Math.max(g.width,g.height));let r=a.createRadialGradient(0,0,0,0,0,n);r.addColorStop(0,`rgb(0 0 0 / 0.85)`),r.addColorStop(.65,`rgb(0 0 0 / 0.7)`),r.addColorStop(1,`rgb(0 0 0 / 0)`),a.fillStyle=r,a.fillRect(-n,-n,2*n,2*n),a.restore()}a.globalCompositeOperation=`source-over`},y=()=>{let e=Math.floor(Math.random()*u.length),t=u[e],r=((t.off+m*t.speed)%t.span+t.span)%t.span,i=e*30+15,a=e=>!!g&&e>g.x-40&&e<g.right+40&&i>g.y-20&&i<g.bottom+20,o=t.toks.map((e,t)=>[e.x+r,t]).filter(([e])=>e>0&&e<c-60&&!a(e)),s=o.length?o:t.toks.map((e,n)=>[e.x+r-t.span,n]).filter(([e])=>e>0&&e<c-60&&!a(e));if(!s.length)return;let[,l]=s[Math.floor(Math.random()*s.length)];d.push({row:e,tok:l,born:m,c:n[Math.floor(Math.random()*n.length)]})},b=e=>{if(!f||document.hidden)p=0;else{for(p&&(m+=Math.min(e-p,100)/1e3),p=e;m>=h;)y(),h=m+.12+Math.random()*.25;d=d.filter(e=>m-e.born<1.8),v(),requestAnimationFrame(b)}},x=()=>{s||!f||document.hidden||p||requestAnimationFrame(b)};document.fonts.ready.then(()=>{if(_(),s){for(let e=0;e<14;e++)y();v();return}new IntersectionObserver(([e])=>{f=e.isIntersecting,x()}).observe(o),document.addEventListener(`visibilitychange`,x);let e=0;new ResizeObserver(()=>{clearTimeout(e),e=window.setTimeout(()=>{(o.clientWidth!==c||o.clientHeight!==l)&&_()},150)}).observe(o)})}</script><div class="wrap" data-astro-cid-4ikiqo7u><div class="intro" data-calm data-astro-cid-4ikiqo7u><ul class="tags" data-astro-cid-4ikiqo7u><li data-astro-cid-4ikiqo7u>Episode 14</li><li data-astro-cid-4ikiqo7u>25 min</li></ul><h1 class="display grad" data-astro-cid-4ikiqo7u>Batching: serving a GPT to many users at once</h1><p class="sub" data-astro-cid-4ikiqo7u>We serve the model as an API in the shape of OpenAI&#39;s completions, measure it against a crowd of players from a game, write the stories for the requests that arrive together as a batch, and run it in Docker, with vLLM as the alternative.</p><p class="watch" data-astro-cid-4ikiqo7u><a href="https://www.youtube.com/watch?v=6XGhd_83uwU" data-astro-cid-4ikiqo7u>Watch on YouTube</a></p></div></div></header><div class="wrap layout" data-astro-cid-kpaidhwy><main data-astro-cid-kpaidhwy><div class="player" data-player="6XGhd_83uwU" data-title="Batching: serving a GPT to many users at once | Minimum Viable GPT #14" data-astro-cid-g2mknjow><div class="screen" data-astro-cid-g2mknjow><div class="frame" data-astro-cid-g2mknjow><button type="button" class="start" aria-label="Play Batching: serving a GPT to many users at once | Minimum Viable GPT #14" data-astro-cid-g2mknjow><img src="https://i.ytimg.com/vi/6XGhd_83uwU/maxresdefault.jpg" alt="" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/6XGhd_83uwU/hqdefault.jpg'" data-astro-cid-g2mknjow><svg class="play" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="currentColor"></rect><path d="M26 20v24l19-12z" fill="var(--on-accent)"></path></svg></button></div><button type="button" class="close" aria-label="Close the mini player" data-astro-cid-g2mknjow><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button></div></div><script type="module">var e=`https://www.youtube-nocookie.com`,t=document.querySelector(`[data-player]`),n=t?.querySelector(`.screen`),r=t?.querySelector(`.frame`);if(t&&n&&r){let i=document.querySelector(`[data-mini-slot]`),a=(t,n,r=[])=>t.contentWindow?.postMessage(JSON.stringify({event:`command`,func:n,args:r}),e),o=!0,s=!1,c=!1,l=``,u=()=>{if(!s)return;let e=i?.getClientRects().length?i.getBoundingClientRect():null,t=e?`${e.left},${e.top},${e.width},${e.height}`:`corner`;t!==l&&(l=t,n.classList.toggle(`corner`,!e),e?Object.assign(n.style,{left:`${e.left}px`,top:`${e.top}px`,width:`${e.width}px`,height:`${e.height}px`}):n.removeAttribute(`style`)),requestAnimationFrame(u)},d=e=>{s=e,l=``,document.documentElement.classList.toggle(`mini-docked`,e),t.classList.toggle(`away`,e),n.classList.toggle(`docked`,e),e?requestAnimationFrame(u):(n.classList.remove(`corner`),n.removeAttribute(`style`))},f=()=>{let e=!o&&!c;e!==s&&d(e)},p=n=>{let i=r.querySelector(`iframe`);if(i){a(i,`seekTo`,[n,!0]),a(i,`playVideo`);return}let o=document.createElement(`iframe`),s=new URLSearchParams({autoplay:`1`,enablejsapi:`1`,rel:`0`,start:String(Math.floor(n))});o.src=`${e}/embed/${t.dataset.player}?${s}`,o.title=t.dataset.title??``,o.allow=`autoplay; encrypted-media; picture-in-picture; fullscreen`,o.allowFullscreen=!0,r.replaceChildren(o)};new IntersectionObserver(([e])=>{o=e.intersectionRatio>=.5,o&&(c=!1),f()},{threshold:[0,.5,1]}).observe(t),t.querySelector(`.start`)?.addEventListener(`click`,()=>p(0)),n.querySelector(`.close`)?.addEventListener(`click`,()=>{let e=r.querySelector(`iframe`);e&&a(e,`pauseVideo`),c=!0,f()}),document.addEventListener(`click`,e=>{let t=e.target.closest(`a[data-seek]`);!t||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||(e.preventDefault(),c=!1,p(Number(t.dataset.seek)),f())})}</script><p class="colab" data-astro-cid-5xslxzzu><a href="https://colab.research.google.com/github/nenuadrian/mvGPT/blob/main/notebooks/ep014-serving.ipynb" title="Run this episode's code in a Colab notebook" data-astro-cid-5xslxzzu><img src="/colab-badge.svg" alt="Open in Colab" width="140" height="24" data-astro-cid-5xslxzzu></a></p><p class="description" data-astro-cid-kpaidhwy>In this episode, we serve our model to many users at once, say the players of a game like nanoMMO from my other series, through an API in the shape of OpenAI&#39;s completions. Written one request at a time, the wait grows with the queue, so the server writes the stories of the waiting requests together, as a batch padded on the left. We measure it with a script that simulates a crowd of players, put the server in Docker, and look at vLLM as the alternative.</p><p class="topics muted" data-astro-cid-kpaidhwy>Topics: <a href="/?topic=inference#episodes" data-astro-cid-kpaidhwy>Inference</a></p><section aria-labelledby="code" data-astro-cid-kpaidhwy><h2 class="section-title" id="code" data-astro-cid-kpaidhwy>The code</h2><p class="muted" data-astro-cid-kpaidhwy>Each step on screen is a tag in <a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-kpaidhwy>the code&#39;s repository</a>. The code at the end of the episode is <a href="https://github.com/nenuadrian/mvGPT/tree/ep014/end" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep014/end</code></a>.</p><ol class="steps" data-astro-cid-kpaidhwy><li data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=163s" data-seek="163" data-astro-cid-kpaidhwy>2:43</a><span class="step" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep014/step-1</code><span class="muted" data-astro-cid-kpaidhwy>A completions API</span></span><span class="links" data-astro-cid-kpaidhwy><a href="https://github.com/nenuadrian/mvGPT/tree/ep014/step-1" data-astro-cid-kpaidhwy>Browse</a><a href="https://github.com/nenuadrian/mvGPT/compare/ep013/end...ep014/step-1" data-astro-cid-kpaidhwy>Changes</a></span></li><li data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=551s" data-seek="551" data-astro-cid-kpaidhwy>9:11</a><span class="step" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep014/step-2</code><span class="muted" data-astro-cid-kpaidhwy>A crowd of players</span></span><span class="links" data-astro-cid-kpaidhwy><a href="https://github.com/nenuadrian/mvGPT/tree/ep014/step-2" data-astro-cid-kpaidhwy>Browse</a><a href="https://github.com/nenuadrian/mvGPT/compare/ep014/step-1...ep014/step-2" data-astro-cid-kpaidhwy>Changes</a></span></li><li data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=839s" data-seek="839" data-astro-cid-kpaidhwy>13:59</a><span class="step" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep014/step-3</code><span class="muted" data-astro-cid-kpaidhwy>Batching</span></span><span class="links" data-astro-cid-kpaidhwy><a href="https://github.com/nenuadrian/mvGPT/tree/ep014/step-3" data-astro-cid-kpaidhwy>Browse</a><a href="https://github.com/nenuadrian/mvGPT/compare/ep014/step-2...ep014/step-3" data-astro-cid-kpaidhwy>Changes</a></span></li><li data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1240s" data-seek="1240" data-astro-cid-kpaidhwy>20:40</a><span class="step" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep014/step-4</code><span class="muted" data-astro-cid-kpaidhwy>In Docker</span></span><span class="links" data-astro-cid-kpaidhwy><a href="https://github.com/nenuadrian/mvGPT/tree/ep014/step-4" data-astro-cid-kpaidhwy>Browse</a><a href="https://github.com/nenuadrian/mvGPT/compare/ep014/step-3...ep014/step-4" data-astro-cid-kpaidhwy>Changes</a></span></li><li data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1434s" data-seek="1434" data-astro-cid-kpaidhwy>23:54</a><span class="step" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep014/step-5</code><span class="muted" data-astro-cid-kpaidhwy>vLLM</span></span><span class="links" data-astro-cid-kpaidhwy><a href="https://github.com/nenuadrian/mvGPT/tree/ep014/step-5" data-astro-cid-kpaidhwy>Browse</a><a href="https://github.com/nenuadrian/mvGPT/compare/ep014/step-4...ep014/step-5" data-astro-cid-kpaidhwy>Changes</a></span></li></ol></section><section aria-labelledby="transcript" data-astro-cid-kpaidhwy><details class="transcript" open data-astro-cid-kpaidhwy><summary data-astro-cid-kpaidhwy><h2 class="section-title" id="transcript" data-astro-cid-kpaidhwy>Transcript</h2></summary><h3 data-astro-cid-kpaidhwy>Intro</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU" data-seek="0" data-astro-cid-kpaidhwy>0:00</a> Hello and welcome back to episode fourteen, where we&#39;re going to serve our model to a crowd, such as the players of a game, through an API that writes the stories for requests arriving together, as a batch. Let&#39;s begin with a quick look at where we&#39;re going to be by the end of the episode.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=17s" data-seek="17" data-astro-cid-kpaidhwy>0:17</a> By the end of today, with sixty-four players asking our model for a story at once, the server writes about thirty-nine hundred tokens a second, against about six hundred and ninety when it writes one request at a time. And the median player waits about one point seven seconds for a story, instead of about nine point two.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=35s" data-seek="35" data-astro-cid-kpaidhwy>0:35</a> On the website of the series, you can find more information about the project. The code is open source on GitHub, tagged at each step of each episode, so that you can follow along, and the docs get a page on serving the model today, with all of today&#39;s measurements. And each episode has its own page here, with its chapters and its code.</p><h3 data-astro-cid-kpaidhwy>A game is a crowd</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=55s" data-seek="55" data-astro-cid-kpaidhwy>0:55</a> Now, before we get to today&#39;s work, let&#39;s quickly go over what we did last time. We wrote flash attention, which computes attention a block at a time without keeping its table of scores, first in PyTorch on the Mac and then as a Triton kernel on a rented GPU, and we trained the model with it. So far, the model has been served by the Gradio app from episode five, in Docker on a server, and by the page that runs it in the browser, and both write a story for one person at a time. A game is different, as many of its players can ask for something at once, and that&#39;s who we&#39;re going to serve today.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=89s" data-seek="89" data-astro-cid-kpaidhwy>1:29</a> The game comes from my other series, nanoMMO, where we build an MMORPG from scratch, both the client and the server. Its focus is the engineering around the game, such as Docker, benchmarking, monitoring with Prometheus and Grafana, MySQL and Redis. Its name takes after Andrej Karpathy&#39;s nanochat, and like mvGPT, it keeps its code minimal, while covering an MMO from one end to the other. Say its world has a storyteller, and players can walk up to it and ask for a story with a few words, which our model writes. Then the game&#39;s server sends a request for each player who asks, and many of them can ask at once.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=127s" data-seek="127" data-astro-cid-kpaidhwy>2:07</a> The players talk to the game&#39;s server, as they do today, and the game&#39;s server sends ours an HTTP request for each story, in the shape of OpenAI&#39;s completions API, which most clients and servers for language models speak. Our server loads the fine-tuned model from the Hub, by its tag, and writes one story at a time at first, which we&#39;re going to measure against a crowd. Then it writes the stories for the requests that arrive together as a batch, and we measure it again. And last, it goes into a Docker image of its own, so that a game can run it next to its other services. All right, let&#39;s get started with the server and its completions API.</p><h3 data-astro-cid-kpaidhwy>A completions API</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=164s" data-seek="164" data-astro-cid-kpaidhwy>2:44</a> We start a new file, server dot py, which imports argparse, for its flags, json, for the requests and the answers, and os, for the environment variables. Queue is Python&#39;s queue that threads can share safely, where requests are going to wait for the model. Threading gives us the model&#39;s thread, along with the events a request waits on, time is for each answer&#39;s timestamp, and uuid gives each answer an id. From dataclasses, dataclass and field, for a small class that holds a request. And from http dot server, the HTTP server in Python&#39;s standard library, the base class for handling requests, and the threading server, which gives each connection a thread of its own. Then torch, and from transformers, the auto classes that load the model and the tokenizer from the Hub, as the app did in episode five, and detokenize, from our own tokenizer dot py. The repo and the revision come from environment variables, like the app&#39;s, with the fine-tuned model from episode three as the default, which writes the story an instruction asks for. A request is a dataclass, like our model&#39;s config since episode one. By default, a dataclass compares two objects by their fields, so we turn that off, and the comment says why: two requests asking for one story are still two requests. A request holds the prompt&#39;s token ids, max tokens, the temperature and top k. Tokens is a list, and field with a default factory gives each request a new one, as dataclasses refuse a plain list as a default, which all the requests would share. From tokens on, the fields are filled in by the model&#39;s thread, which sets done when they&#39;re ready. The finish reason starts as length, and done is a threading event, which a thread can wait on until another thread sets it. Write takes the model, a request and the token id of the end of text, and no grad turns off the gradients, as we&#39;re not training. X is the prompt, as a batch of one, and past is the KV cache, empty to begin with. For up to max tokens, the model takes x and the cache, and with use cache, transformers&#39; GPT-2 hands the cache back with the new keys and values in it, like ours has since episode four. We take the logits at the last position and divide them by the temperature. Then the logits below the k-th largest get minus infinity, which leaves the top k tokens to pick from. Multinomial picks the next token from the softmax&#39;s probabilities, and indexing with none makes it a batch of one again, for the next step. If it&#39;s the end of text, the finish reason is stop, and we return, and otherwise the token joins the story. Serve runs on the model&#39;s thread, in a loop. Get waits until there&#39;s a request in the queue, write writes it, and setting done wakes up the thread that&#39;s waiting for it. Over the loop, we write that this is the model&#39;s thread, one request at a time, in the order they came. Decode turns the tokens into text, and for our word-level tokenizer, we join the tokens with detokenize, as the app does, and the comment says why: it&#39;s saved as WordPiece, whose decode puts spaces around punctuation. The BPE model from episode twelve goes through the tokenizer&#39;s own decode. The server is a threading HTTP server, with a request queue size of a hundred and twenty-eight, the number of connections that can wait for the server to accept them. With the default of five, a crowd of players gets turned away. Handler is a function that makes the class answering the requests, so that the class&#39;s methods have the tokenizer, the context window and the queue in reach, without any globals. The server makes a handler object from it for each request. Do get handles the GET requests, and any path but slash health gets a four oh four, with the error in the shape OpenAI&#39;s API gives its errors. Slash health answers with the model&#39;s name and tag, so that whoever runs the server can check that it&#39;s up. Do post answers slash v one slash completions, the path of OpenAI&#39;s API. It reads as many bytes as the content length header says, parses the JSON, and the tokenizer turns the prompt into ids. The room is what&#39;s left of the context window after the prompt, as the prompt and what&#39;s written after it have to fit in the context window. So a prompt that leaves no room gets a four hundred, with a message saying why. The request takes max tokens, cut to the room left, then the temperature and top k, with the defaults we&#39;ve used since episode two. It goes on the queue, and this thread waits on the request&#39;s event while the model&#39;s thread writes the story. The answer has an id, the kind of object, a text completion, and when it was created, as OpenAI&#39;s answers do. The choices hold the story, decoded, and why it stopped, and the usage counts the tokens, so that a client can tell what a request cost. Reply turns the body into JSON, as bytes, then sends the status, the headers for the content&#39;s type and length, and the bytes. And log message is left empty, as a line per request is too many under load. In main, argparse reads the server&#39;s flags, and for now there&#39;s a single one, the port, which defaults to eight thousand, as it does in vLLM, a server for language models that we&#39;re going to look at later. The tokenizer and the model load from the Hub, and eval, as before, puts the model in evaluation mode. Then the queue, where requests wait for the model, which runs on a thread of its own. The thread runs serve, and daemon means it doesn&#39;t keep the program running once the main thread ends. The host comes from an environment variable, like the app&#39;s, and as the comment says, in Docker the server has to listen on all interfaces for a published port to reach it. The server gets the handler, with the model&#39;s context window, two hundred and fifty-six tokens. Print says where it&#39;s serving, and flush writes the line straight away, as Python holds its output back when it isn&#39;t printing to a terminal, such as in Docker&#39;s logs. And serve forever answers requests until we stop it. So, the model runs on a single thread, which takes the requests one at a time, while each connection&#39;s thread waits on its own request&#39;s event. As such, the connections don&#39;t hold each other up, and the model doesn&#39;t run on two threads at once.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=529s" data-seek="529" data-astro-cid-kpaidhwy>8:49</a> We start the server in the background, with an ampersand at the end, and it loads the model from the Hub and prints where it&#39;s listening. Then curl sends it a request, where dash H sets the content type and dash d is the JSON body, asking for sixty tokens with the words dragon, castle and brave. And jq prints the answer indented, with the story, why it stopped, and how many tokens it took.</p><h3 data-astro-cid-kpaidhwy>A crowd of players</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=552s" data-seek="552" data-astro-cid-kpaidhwy>9:12</a> To simulate the crowd, we write a new file, load dot py, which imports argparse, json, random, for the words each player asks for, and statistics, for the median. Threading runs the players at once, time is for the clock, and from urllib, the standard library&#39;s HTTP client, its errors and its requests, so the script runs on Python&#39;s standard library alone. The words are things from nanoMMO&#39;s world, such as sword, gate, skeleton and dragon, and as the comment says, they&#39;re what players in a game could ask a storyteller for, words from the game that the model knows. Merchant, healer and bard aren&#39;t among the model&#39;s ten thousand tokens, so they&#39;d come in as unknown tokens, and the stories would come out without them. A client is one player, and its random generator gets a seed of its own, so each player asks for different words, and each run asks for those words again. Its comment says what a client does: a request, the wait for its story, then the next. For each of its requests, the prompt is an instruction with three of the words, and the body is the JSON for it, with max tokens, and perf counter starts the clock, before the request is built. urllib&#39;s request takes the URL, the body and the headers, here the content type. Then urlopen sends it, which is a POST, as it has a body, and json load reads the answer, where the usage says how many tokens the story took. A request that fails, with an error from urllib or a reset connection, goes in the errors and stays out of the times. We catch both, as when the server resets a connection while we wait for the answer, Python raises a plain connection error, without urllib&#39;s wrapping. And the time it took goes in the results, with its tokens. Run takes the URL, how many clients, and how many requests and tokens each of them asks for, and it starts with empty lists for the results and the errors. It makes a thread for each client, with its seed and both lists, which all the threads share. Appending to a list from several threads is safe in Python, as each append happens in one go. We start the clock, then each thread, and join waits for each of them to finish, so the clock stops once the last player has its last story. If no request got through, it stops with a message asking whether the server is running. The row has the clients, the requests that got through, the errors and the seconds the run took, and the tokens a second are all the tokens written, divided by those seconds. The median is the middle of the sorted times, and the ninety-fifth percentile is the wait that ninety-five percent of the requests beat, so one request in twenty waits longer than that. In main, argparse reads the flags, and the URL defaults to our server&#39;s completions, on this machine. Clients takes one or more numbers, with n args plus, and by default, it&#39;s one, four, sixteen and sixty-four, which run one after another. Each client sends four requests, one after another, of a hundred tokens each, so a crowd of sixty-four sends two hundred and fifty-six of them. One short request warms the server up first, as the first pass through the model takes longer than the rest. Then we print the table&#39;s header, with its columns padded to line up. For each number of clients, run simulates that crowd, and we keep the row it returns in a list and print it, with the clients, the requests and the errors, then the tokens a second, the median and the ninety-fifth percentile. And dash dash out, when it&#39;s given, writes the rows as JSON, for the charts.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=759s" data-seek="759" data-astro-cid-kpaidhwy>12:39</a> Now we run the load script, with the server running in the background as before, and dash dash out to keep the measurements. With one player, a story of a hundred tokens takes about one hundred and fifty milliseconds, about six hundred and eighty tokens a second. With more players, the server writes about as many tokens a second, as it takes them one at a time, so each player waits for the stories of the players in front of them. With sixteen players, the median wait is about two point two seconds, and with sixty-four, it&#39;s about nine point two seconds, while the slowest five percent wait about nine point two seconds or more.</p><h3 data-astro-cid-kpaidhwy>Batching</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=793s" data-seek="793" data-astro-cid-kpaidhwy>13:13</a> To write the stories for several requests together, their prompts go into one tensor, a row each, and as prompts can have different lengths, the shorter ones get padding tokens. We pad on the left, so that each prompt ends in the last column, and the token each row writes next goes in the next column, for all the rows at once. The attention mask has a one for each token and a zero for each pad, and attention leaves the pads out, so no token attends to them. And the positions count each row&#39;s own tokens, from the cumulative sum of the mask, minus one, so the first word of each prompt is at position zero, however much padding there is in front of it. Our model learned an embedding for each position, so without that, a padded prompt would read as if it started later, and the model would write something else.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=840s" data-seek="840" data-astro-cid-kpaidhwy>14:00</a> Write now takes a batch of requests, along with the ids of the padding token and of the end of text. The width is the longest prompt in the batch, and with left padding, each prompt ends in the last column, so each row&#39;s next token goes after it. So x has a row per request, with the padding it needs and then its prompt. The mask has a row per request too, a zero for each pad and a one for each token, and its comment says what it&#39;s for: attention leaves the padding out. The temperature becomes a column, a row per request, so it divides each row&#39;s logits by that request&#39;s temperature, and top k is a column too. Past is the cache, and writing is the list of requests whose stories aren&#39;t finished yet. The loop runs for the longest max tokens in the batch. The positions are the cumulative sum of the mask along each row, minus one, and clamp turns the pads&#39; minus ones into zeros. On the first step that&#39;s the whole prompt, and after that the last column, the new token&#39;s, which is what the slice keeps. So a row&#39;s positions count its own tokens, not the padding in front of them. The model gets the attention mask and the position ids, with the cache as before. The logits are each row&#39;s last position, divided by its temperature. For top k, topk takes as many logits from each row as the largest top k in the batch, sorted from the largest down, and gather picks from each row the value at its own k, minus one, as the index starts at zero. And the comment reads, each row keeps its own top k, its k-th largest logit, among the largest k of the batch. Multinomial now picks a token for each row, as a column, and the mask grows by a column of ones, for the new tokens. Then each request gets its token, and a request that&#39;s finished skips it, as its row still runs with the others, and what it writes is dropped. The end of text sets the finish reason to stop and takes the request off the list, and otherwise the token joins its story, until it has max tokens. Once that list is empty, the batch is done, so a row that finished early still takes its share of each step until then. Serve now takes two more arguments, the most requests in a batch, and the wait, in seconds. The batch starts with the first request, where get waits for one, as before. The deadline is the wait from now, on the monotonic clock, which keeps going forward when someone sets the computer&#39;s clock. While the batch has room, get waits for another request, for whatever time is left until the deadline, and queue empty means the time is up. The comment over the loop says why we wait: without it, the first of a crowd would go alone, with the rest queued behind it. Then write writes the whole batch, and each request&#39;s event is set. In main, dash dash batch is the most requests written at once, as its help says, sixteen by default, which we&#39;re going to come back to once we&#39;ve measured it. Dash dash wait takes a float, how long a batch waits to fill, in milliseconds, five by default, which is short next to the time a story takes to write. The thread gets both, and as the flag is in milliseconds, the wait is divided by a thousand, into the seconds the queue&#39;s timeout takes. And the line it prints says up to how many requests it writes at once. Then we write a test, in tests slash test server dot py. It imports transformers&#39; config and model classes for GPT-2, to build a tiny one with random weights, so the test needs no download, and request and write from our server. The pad&#39;s id is zero, and the end of text&#39;s is one. Requests makes a request for each prompt, asking for twelve tokens at a temperature of one. As the comment says, a top k of one always picks the likeliest token, so what&#39;s written doesn&#39;t depend on chance. The test&#39;s name says what it checks, that a batch writes what each request writes alone. It seeds torch&#39;s generator, so that each run gets those random weights and prompts again, and builds a model with a vocabulary of fifty tokens, sixty-four positions, thirty-two channels, and two blocks of two heads. The prompts have three, nine and five random tokens, and the comment says why: they have different lengths, so the batch pads some of them. Each prompt is written alone first, as a batch of one, and then the three together, and the stories have to match. If the mask or the positions were wrong, the padded rows would write something else, so this test pins down both.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1102s" data-seek="1102" data-astro-cid-kpaidhwy>18:22</a> We run the test with pytest, and it passes, so a batch writes what each of its prompts writes alone. I also tried it without the mask, and without the positions, and it fails both times, so it catches either mistake.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1115s" data-seek="1115" data-astro-cid-kpaidhwy>18:35</a> We start the server again, and it now writes up to sixteen requests at once. With one player, a story takes about one hundred and fifty milliseconds, a little longer than before, partly as a lone request waits its five milliseconds before it&#39;s written. With sixteen players, the server writes about thirty-one hundred tokens a second instead of about six hundred and ninety, and the median wait goes from about two point two seconds to about five hundred and ten milliseconds. With sixty-four players, the batches fill up and the rest queue behind them, so the median wait is about one point nine seconds.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1148s" data-seek="1148" data-astro-cid-kpaidhwy>19:08</a> With dash dash batch sixty-four, a batch can take all of the crowd at once. Up to sixteen players, it&#39;s about as fast as batches of sixteen, as no more than sixteen requests are waiting at any time. With sixty-four players, it writes about thirty-nine hundred tokens a second, against about thirty-two hundred with batches of sixteen, and the median wait is about one point seven seconds. These numbers move by about a tenth from one run to the next, and with sixty-four players, batches of sixty-four write about twenty-one percent more than batches of sixteen, so the gain is larger than that variation.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1182s" data-seek="1182" data-astro-cid-kpaidhwy>19:42</a> On a chart, one request at a time stays flat along the bottom, while batches write more as more players ask, up to about thirty-nine hundred tokens a second. And one at a time, the median wait grows in a straight line with the crowd, to about nine point two seconds at sixty-four players, while with batches, it&#39;s about one point seven.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1201s" data-seek="1201" data-astro-cid-kpaidhwy>20:01</a> Batches of sixteen are the default because the KV cache grows with the batch. A token&#39;s keys and values take two times six blocks, times three hundred and eighty-four channels, of four bytes each, which is about eighteen kilobytes. So sixteen full rows, of two hundred and fifty-six tokens, hold about seventy-five megabytes, which a server has to spare. The model from episode twelve has twelve blocks of seven hundred and sixty-eight channels and a window of five hundred and twelve tokens, so a token takes about seventy-two kilobytes. And sixty-four full rows would hold about two point four gigabytes, which is more than a small server may have free.</p><h3 data-astro-cid-kpaidhwy>In Docker</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1241s" data-seek="1241" data-astro-cid-kpaidhwy>20:41</a> To run the server in Docker, the Dockerfile from episode five gets stages, each starting with a FROM line and a name, so that the app and the server share their first steps. The base stage starts from Python&#39;s slim image, installs PyTorch&#39;s build for the CPU as before, and sets the host to all interfaces, for both of them. The server&#39;s stage starts from base, and installs the server&#39;s requirements, from requirements dash server dot txt, which we write in a moment. Then it copies server dot py and tokenizer dot py, the two files the server needs, exposes port eight thousand, and runs the server. The comment above it says how to build it, with docker build dash dash target server. The app&#39;s stage is what the Dockerfile was in episode five, and as its comment says, it&#39;s the last stage, so it&#39;s what docker build makes without a target, which keeps deploy dot sh building the app. The docker ignore file leaves everything out, with a star, and its comment says why: the images need the app, the server and what they import, and nothing else from the repo. Then it lets those files in, with an exclamation mark in front of each, so the checkpoints and the data stay out of what Docker sends to the build. And the server&#39;s requirements are transformers, pinned, without Gradio, which the server doesn&#39;t use.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1316s" data-seek="1316" data-astro-cid-kpaidhwy>21:56</a> Docker build with dash dash target server builds the server&#39;s stage, and dash t names the image. Docker run dash d starts it in the background, publishing port eight thousand, and the volume keeps the model it downloads from the Hub, like the app&#39;s. Then we run the load script again, with one, sixteen and sixty-four players. In Docker on the Mac, a lone player waits about five hundred and fifty milliseconds, and the server writes about one hundred and eighty tokens a second, about three point eight times slower than outside Docker. Docker on the Mac runs Linux in a virtual machine, with PyTorch&#39;s Linux build for ARM, and our model runs slower on that build than on PyTorch for macOS. Batching still writes about five point zero times as much, at about nine hundred tokens a second.</p><h3 data-astro-cid-kpaidhwy>vLLM</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1363s" data-seek="1363" data-astro-cid-kpaidhwy>22:43</a> Our batches start together and end together, so a row that finishes early keeps running, with its tokens dropped, until the last one is done. And a request that arrives just after a batch starts waits for all of it. Servers built for language models schedule each step instead, which is called continuous batching: a finished row leaves straight away, and a waiting request takes its place. vLLM, which started at UC Berkeley, does that, and it keeps the KV cache in blocks of a fixed size, which it calls PagedAttention, so that sequences of different lengths share the GPU&#39;s memory without padding. It runs on the CPU too, on x86, with AVX-512 or with fewer features on AVX2, and on ARM, and it has Docker images for the CPU. It loads both kinds of model we have on the Hub, the fine-tuned GPT-2 from episode three and the GPT-NeoX from episode twelve, and it serves OpenAI&#39;s completions API on port eight thousand, as ours does, so a client written for one works with the other. Our server is about a hundred and fifty lines of Python that we can read line by line, and it joins our word-level tokens back together, where vLLM&#39;s decode would put spaces around the punctuation.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1434s" data-seek="1434" data-astro-cid-kpaidhwy>23:54</a> Last, the docs get a page on serving, with the API, how the server is built, the batches and the test, all of today&#39;s measurements, and vLLM as the alternative. The docs&#39; index and their navigation link to the new page. And the README has the commands to run the server and to put it under load.</p><h3 data-astro-cid-kpaidhwy>Wrap-up</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1452s" data-seek="1452" data-astro-cid-kpaidhwy>24:12</a> So, today we served our model as an API in the shape of OpenAI&#39;s completions, for a crowd such as the players of nanoMMO. One request at a time, it wrote about six hundred and ninety tokens a second whatever the crowd, so with sixty-four players, the median wait was about nine point two seconds. Writing the stories for the waiting requests together, with left padding, an attention mask and each row&#39;s own positions, it wrote about thirty-nine hundred tokens a second, and the wait went down to about one point seven seconds. The server has a Docker image of its own, next to the app&#39;s. And vLLM is the alternative, with continuous batching and OpenAI&#39;s API, on a GPU or on the CPU.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1495s" data-seek="1495" data-astro-cid-kpaidhwy>24:55</a> Let me know in the comments what you&#39;d like a model like ours to write in a game, and which parts of serving you&#39;d like us to go deeper on. And if you&#39;d like to follow along, subscribe to the channel. I hope you find this useful, and thanks for watching.</p></details></section></main><aside aria-labelledby="chapters" data-astro-cid-kpaidhwy><div class="mini-slot" data-mini-slot data-astro-cid-kpaidhwy></div><h2 class="section-title" id="chapters" data-astro-cid-kpaidhwy>Chapters</h2><ol class="chapters" data-astro-cid-kpaidhwy><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=6XGhd_83uwU" data-seek="0" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>0:00</span><span data-astro-cid-kpaidhwy>Intro</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=54s" data-seek="54" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>0:54</span><span data-astro-cid-kpaidhwy>A game is a crowd</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=163s" data-seek="163" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>2:43</span><span data-astro-cid-kpaidhwy>A completions API</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=551s" data-seek="551" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>9:11</span><span data-astro-cid-kpaidhwy>A crowd of players</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=792s" data-seek="792" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>13:12</span><span data-astro-cid-kpaidhwy>Batching</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1240s" data-seek="1240" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>20:40</span><span data-astro-cid-kpaidhwy>In Docker</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1363s" data-seek="1363" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>22:43</span><span data-astro-cid-kpaidhwy>vLLM</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=6XGhd_83uwU&amp;t=1451s" data-seek="1451" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>24:11</span><span data-astro-cid-kpaidhwy>Wrap-up</span></a></li></ol></aside></div><nav class="wrap pager" aria-label="Episodes" data-astro-cid-kpaidhwy><a class="prev" href="/ep013-flash-attention/" data-astro-cid-kpaidhwy><span class="muted" data-astro-cid-kpaidhwy>← Episode 13</span><span data-astro-cid-kpaidhwy>Flash attention from scratch: PyTorch, Triton</span></a><a class="next" href="/ep015-diffusion/" data-astro-cid-kpaidhwy><span class="muted" data-astro-cid-kpaidhwy>Episode 15 →</span><span data-astro-cid-kpaidhwy>Text diffusion: a GPT that writes all at once</span></a></nav><script type="module">var e=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5].map(e=>(e+.5)/16),t=(e,t,n=0)=>{let r=Math.sin(e*127.1+t*311.7+n*74.7)*43758.5453;return r-Math.floor(r)},n=e=>e*e*(3-2*e);function r(e,r){let i=Math.floor(e),a=Math.floor(r),o=n(e-i),s=n(r-a),c=t(i,a),l=t(i+1,a),u=t(i,a+1),d=t(i+1,a+1);return c+(l-c)*o+(u-c)*s+(c-l-u+d)*o*s}function i(e,t){let n=0,i=.5;for(let a=0;a<4;a++)n+=i*r(e,t),e=e*2.03+17.1,t=t*2.03+9.2,i*=.5;return n/.9375}var a=(e,t,r)=>n(Math.max(0,Math.min(1,(e-t)/(r-t)))),o=(e,t)=>e===`left`?.1+.9*a(t,.35,.8):e===`center`?.08+.92*a(Math.abs(t-.5)*2,.5,.95):1,s=e=>3+e*7.3;function c({cols:t,rows:n,shades:r,seed:a=0,calm:c=`even`,t:l=s(a)}){let u=t/n,d=new Uint8Array(t*n);for(let s=0;s<n;s++)for(let f=0;f<t;f++){let p=f/t*u*1.15+a*13.7,m=s/n*1.15+a*5.3,h=i(p+l*.04,m-l*.02),g=i(p+4*h+l*.06,m+4*h-l*.05),_=Math.max(0,Math.min(1,(g-.3)/.32)),v=Math.exp(-(((_-.62)/.05)**2)),y=(_**1.9+.7*v)*o(c,f/(t-1))*(r-1)+e[s%4*4+f%4]-.5;d[s*t+f]=Math.max(0,Math.min(r-1,Math.round(y)))}return d}function l({cols:e,rows:n,ember:r,seed:i=0,calm:a=`even`,t:s}){let c=[];for(let l=0;l<Math.round(e*n/90);l++){let u=1.2+2.8*t(l,1,i),d=n+8,f=Math.floor(d-(s*u+t(l,2,i)*d)%d)-4,p=Math.floor(t(l,3,i)*e+Math.sin(s*1.3+l)*1.5);f<0||f>=n||p<0||p>=e||o(a,p/e)<.7||t(l,4,i)>o(a,p/e)||t(l,Math.floor(s*8),i)<.18||c.push({x:p,y:f,color:r[l%r.length]})}return c}var u=120,d=36,f=20;function p(e,{field:t,ember:n}){let r=t.map(e=>[1,3,5].map(t=>parseInt(e.slice(t,t+2),16))),i=Number(e.dataset.seed??0),a=e.dataset.calm??`even`,o=document.createElement(`canvas`);o.className=`field-anim`,o.width=u,o.height=d,o.setAttribute(`aria-hidden`,`true`);let p=o.getContext(`2d`);if(!p)return;let m=p.createImageData(u,d),h=s(i),g=0,_=0,v=!1,y=!0,b=e=>{let o=c({cols:u,rows:d,shades:t.length,seed:i,calm:a,t:e});for(let e=0;e<o.length;e++){let[t,n,i]=r[o[e]];m.data.set([t,n,i,255],e*4)}p.putImageData(m,0,0);for(let t of l({cols:u,rows:d,ember:n,seed:i,calm:a,t:e-h}))p.fillStyle=t.color,p.fillRect(t.x,t.y,1,1)},x=e=>{!y||document.hidden?v=!1:(_&&(g+=Math.min(e-_,100)/1e3),_=e,b(h+g),setTimeout(()=>requestAnimationFrame(x),1e3/f))},S=()=>{v||!y||document.hidden||(v=!0,_=0,requestAnimationFrame(x))};b(h),e.prepend(o),new IntersectionObserver(([e])=>{y=e.isIntersecting,S()}).observe(e),document.addEventListener(`visibilitychange`,S)}var m=document.body.dataset.palette;if(m&&!matchMedia(`(prefers-reduced-motion: reduce)`).matches){let e=JSON.parse(m);document.querySelectorAll(`.field[data-seed]`).forEach(t=>p(t,e))}var h=document.querySelector(`.bar`);if(h){let e=window.scrollY,t=!1,n=()=>{t=!1;let n=Math.max(0,window.scrollY);h.classList.toggle(`solid`,n>0),n<=h.offsetHeight?(h.classList.remove(`away`),e=n):Math.abs(n-e)>4&&(h.classList.toggle(`away`,n>e),e=n)};window.addEventListener(`scroll`,()=>{t||(t=!0,requestAnimationFrame(n))},{passive:!0}),n(),new ResizeObserver(()=>document.documentElement.style.setProperty(`--bar-h`,`${h.offsetHeight}px`)).observe(h)}</script><footer class="foot" data-astro-cid-hkbrpulz><div class="wrap foot-inner" data-astro-cid-hkbrpulz><span data-astro-cid-hkbrpulz>mvGPT – Building a Minimum Viable GPT, A Language Model from Scratch</span><nav aria-label="Elsewhere" data-astro-cid-hkbrpulz><a href="/about/" data-astro-cid-hkbrpulz>About</a><a href="https://www.youtube.com/playlist?list=PLR-9Y4UPbi8n5DURn9WMeMu3V_EJ7GD-A" data-astro-cid-hkbrpulz>YouTube</a><a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>The code on GitHub</a><a href="https://nenuadrian.github.io/mvGPT/" data-astro-cid-hkbrpulz>Docs</a><a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>The models on Hugging Face</a><a href="/rss.xml" data-astro-cid-hkbrpulz>RSS</a></nav></div></footer></body></html>

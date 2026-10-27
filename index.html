@@ -1,0 +1,541 @@
+<!DOCTYPE html><html lang="en-GB" data-astro-cid-hkbrpulz><head><script async src="https://www.googletagmanager.com/gtag/js?id=G-F16ZZFP5E4"></script><script>window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', "G-F16ZZFP5E4");</script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>mvGPT | Minimum Viable GPT: A Language Model from Scratch</title><meta name="description" content="Understand language models from the ground up: define a GPT in PyTorch, take it through the whole training pipeline, from pretraining to reinforcement learning, with the metrics that show what it learned, and deploy it."><link rel="canonical" href="https://mvgpt.nenuadrian.com/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="alternate" type="application/rss+xml" title="mvGPT" href="/rss.xml"><link rel="sitemap" href="/sitemap.xml"><meta name="theme-color" content="#101215"><meta property="og:site_name" content="mvGPT"><meta property="og:type" content="website"><meta property="og:title" content="mvGPT | Minimum Viable GPT: A Language Model from Scratch"><meta property="og:description" content="Understand language models from the ground up: define a GPT in PyTorch, take it through the whole training pipeline, from pretraining to reinforcement learning, with the metrics that show what it learned, and deploy it."><meta property="og:url" content="https://mvgpt.nenuadrian.com/"><meta property="og:locale" content="en_GB"><meta property="og:image" content="https://i.ytimg.com/vi/NxeRk1Q8LXY/maxresdefault.jpg"><meta property="og:image:alt" content="Text to Cypher: our GPT asks a graph database | Minimum Viable GPT #24"><meta name="twitter:card" content="summary_large_image"><style>@font-face{font-family:"aphrodite-display";src:url("/fonts/display-SpaceGrotesk-Medium.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"aphrodite-display";src:url("/fonts/display-SpaceGrotesk-Bold.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+:root{--bg:#101215;--bg-rgb:16 18 21;--surface:#14171b;--surface-2:#191d22;--line:#1f242b;--shadow:#272d36;--text:#e8ecf2;--heading:#eef2f8;--prose:#d8dce2;--muted:#a6aab0;--faint:#81868d;--ember:#9fb4ff;--ember-2:#a8e6ed;--on-ember:#14171b;--code:#9FB4FF;--font-display:"aphrodite-display", var(--font-ui);--font-ui:"Inter", -apple-system, 'Helvetica Neue', sans-serif;--font-mono:"JetBrains Mono", Menlo, monospace;--font-hand:"Caveat", 'Comic Sans MS', cursive}</style><style>/* mvGPT's website on top of aphrodite's: a near-black slate, a soft glow, titles in a periwinkle ->
+   white -> mint ramp, Space Grotesk throughout. aphrodite's own rules are in a cascade layer, so
+   these win over them; its markup is the same for both series, and site/components/ holds what's
+   mvGPT's alone (the brand, the heroes, the token field, the model to try, the player's icons). */
+
+/* Space Grotesk (public/fonts/, from @fontsource/space-grotesk 5.3.0, OFL). */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(/fonts/space-grotesk-latin-ext-400-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(/fonts/space-grotesk-latin-400-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(/fonts/space-grotesk-latin-ext-500-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(/fonts/space-grotesk-latin-500-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(/fonts/space-grotesk-latin-ext-600-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(/fonts/space-grotesk-latin-600-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(/fonts/space-grotesk-latin-ext-700-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(/fonts/space-grotesk-latin-700-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+:root {
+  --bg: #101215;
+  --bg-rgb: 16 18 21;
+  --surface: #15181c;
+  --surface-2: #1b1f24;
+  --line: #262a31;
+  --text: #e8ecf2;
+  --heading: var(--text);
+  --prose: #cfd3da;
+  --muted: #abadb0;
+  --faint: #7d8087;
+  --peri: #9fb4ff;
+  --white: #eef2f8;
+  --mint: #a8e6ed;
+  --brace: #8b9de8;
+  --ember: var(--peri);
+  --ember-2: var(--mint);
+  --on-ember: #101215;
+  --on-accent: #101215;
+  --code: var(--mint);
+  --grad: linear-gradient(100deg, var(--peri) 0%, var(--white) 50%, var(--mint) 100%);
+  --font-display: 'Space Grotesk', -apple-system, 'Helvetica Neue', sans-serif;
+  --font-ui: var(--font-display);
+  --font-mono: 'JetBrains Mono', Menlo, monospace;
+  /* The names our own parts use. */
+  --display: var(--font-display);
+  --ui: var(--font-ui);
+  --mono: var(--font-mono);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1.1;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: inherit;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  text-shadow: none;
+}
+
+/* Gradient title text, as on the thumbnails. */
+.grad {
+  width: fit-content;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Kicker tags: small mono labels in thin outlines, the first in periwinkle. */
+.tags {
+  gap: 8px;
+}
+.tags > *,
+.tags > :last-child {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: rgb(16 18 21 / 0.6);
+}
+.tags > :first-child {
+  border-color: rgb(159 180 255 / 0.45);
+  color: var(--peri);
+}
+
+/* A hero with the soft glow behind its title. */
+.glow {
+  position: relative;
+  isolation: isolate;
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+.glow::before {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  inset: -30% -10% -30% 25%;
+  background:
+    radial-gradient(closest-side at 55% 50%, rgb(159 180 255 / 0.1), transparent),
+    radial-gradient(closest-side at 75% 55%, rgb(168 230 237 / 0.06), transparent);
+  pointer-events: none;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+}
+
+/* The bar: in the page's flow, frosted, sliding away while scrolling down. */
+.bar,
+.bar.solid {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgb(16 18 21 / 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+  transition: transform 200ms ease;
+}
+.bar-inner {
+  padding-block: 14px;
+}
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+  text-shadow: none;
+}
+.curly {
+  color: var(--brace);
+  font-weight: 400;
+}
+.curly:first-child {
+  margin-right: 0.08em;
+}
+.curly:last-child {
+  margin-left: 0.08em;
+}
+.bar nav {
+  flex-wrap: nowrap;
+  gap: clamp(14px, 3vw, 28px);
+}
+.bar nav a {
+  color: var(--muted);
+}
+.bar nav a:hover {
+  color: var(--white);
+}
+@media (max-width: 480px) {
+  .bar nav {
+    gap: 12px;
+  }
+  .bar nav a {
+    white-space: nowrap;
+    font-size: 0.88rem;
+  }
+}
+
+/* Episode cards: lifting with a glow. */
+.card {
+  overflow: hidden;
+  box-shadow: none;
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+.card:hover {
+  border-color: rgb(159 180 255 / 0.5);
+  box-shadow: 0 10px 40px -12px rgb(159 180 255 / 0.25);
+  transform: translateY(-2px);
+}
+.card .placeholder {
+  background: radial-gradient(closest-side, rgb(159 180 255 / 0.1), transparent) var(--bg);
+}
+.card .placeholder span,
+.player.draft .display {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.card .placeholder span {
+  font-size: clamp(1.5rem, 3.4vw, 2rem);
+}
+.card .tags > * {
+  font-size: 0.78rem;
+  border-width: 1px;
+}
+.card h3 {
+  font-weight: 600;
+}
+
+/* The player: square, with a square play button, and a mini player that pops in. */
+.player {
+  overflow: hidden;
+  box-shadow: 0 20px 60px -24px rgb(159 180 255 / 0.25);
+}
+.player.draft {
+  background: radial-gradient(closest-side, rgb(159 180 255 / 0.1), transparent) var(--bg);
+}
+.player.draft p {
+  background: none;
+}
+.screen.docked {
+  z-index: 4;
+  animation: pop 180ms ease-out;
+}
+.docked .frame {
+  box-shadow:
+    0 18px 48px -12px rgb(0 0 0 / 0.7),
+    0 0 0 1px rgb(159 180 255 / 0.12);
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen.docked {
+    animation: none;
+  }
+}
+.close {
+  top: -11px;
+  right: -11px;
+}
+.corner .close {
+  right: -6px;
+}
+.close:hover {
+  color: var(--white);
+  border-color: rgb(159 180 255 / 0.5);
+}
+.close svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: square;
+}
+.start .play {
+  width: 76px;
+  height: 76px;
+  color: var(--peri);
+  filter: drop-shadow(0 6px 24px rgb(0 0 0 / 0.5));
+  transition:
+    color 150ms ease,
+    scale 150ms ease;
+}
+.docked .start .play {
+  width: 48px;
+  height: 48px;
+}
+.start:hover .play,
+.start:focus-visible .play {
+  color: var(--mint);
+  scale: 1.06;
+}
+
+/* An episode page: quiet times, thin rules. */
+.time {
+  color: var(--faint);
+}
+a.time:hover {
+  color: var(--mint);
+  text-decoration: none;
+}
+.chapters {
+  border-left-width: 1px;
+}
+.chapters a:hover {
+  box-shadow: -2px 0 0 var(--peri);
+}
+.pager a:hover {
+  border-color: rgb(159 180 255 / 0.5);
+}
+
+/* Square corners everywhere, form controls too, whatever the browser draws by default. */
+button,
+input,
+textarea,
+select {
+  border-radius: 0;
+}
+</style><script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"mvGPT","alternateName":"Minimum Viable GPT: A Language Model from Scratch","url":"https://mvgpt.nenuadrian.com/","description":"Understand language models from the ground up: define a GPT in PyTorch, take it through the whole training pipeline, from pretraining to reinforcement learning, with the metrics that show what it learned, and deploy it.","inLanguage":"en-GB"}</script><link rel="stylesheet" href="/_astro/Base.dQHtagFK.css"><link rel="stylesheet" href="/_astro/index.wlgAnjrD.css"><style>.token-field[data-astro-cid-r5v4z3ma]{z-index:-1;pointer-events:none;width:100%;height:100%;position:absolute;inset:0}
+</style></head><body data-palette="{&quot;field&quot;:[&quot;#101215&quot;,&quot;#14171b&quot;,&quot;#191d22&quot;,&quot;#1f242b&quot;,&quot;#272d36&quot;,&quot;#343b47&quot;,&quot;#48526a&quot;,&quot;#6a77a0&quot;],&quot;ember&quot;:[&quot;#9fb4ff&quot;,&quot;#a8e6ed&quot;]}" data-astro-cid-hkbrpulz><header class="bar" data-astro-cid-hkbrpulz><div class="wrap bar-inner" data-astro-cid-hkbrpulz><a class="brand" href="/" data-astro-cid-hkbrpulz><span class="curly">{</span><span class="grad">mvGPT</span><span class="curly">}</span></a><nav aria-label="Site" data-astro-cid-hkbrpulz><a class="episodes" href="/#episodes" data-astro-cid-hkbrpulz>Episodes</a><a href="/about/" data-astro-cid-hkbrpulz>About</a><a href="https://www.youtube.com/playlist?list=PLR-9Y4UPbi8n5DURn9WMeMu3V_EJ7GD-A" data-astro-cid-hkbrpulz>YouTube</a><a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>Code</a><a href="https://nenuadrian.github.io/mvGPT/" data-astro-cid-hkbrpulz>Docs</a><a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-hkbrpulz><span class="long" data-astro-cid-hkbrpulz>Hugging Face</span><abbr class="short" title="Hugging Face" data-astro-cid-hkbrpulz>HF</abbr></a></nav></div></header><header class="hero glow" data-astro-cid-crf4w3nd><canvas class="token-field" aria-hidden="true" data-words="[&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;girl&quot;,&quot;named&quot;,&quot;Sam&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;was&quot;,&quot;scared&quot;,&quot;because&quot;,&quot;he&quot;,&quot;needed&quot;,&quot;to&quot;,&quot;go&quot;,&quot;.&quot;,&quot;He&quot;,&quot;thought&quot;,&quot;for&quot;,&quot;help&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;had&quot;,&quot;a&quot;,&quot;little&quot;,&quot;bit&quot;,&quot;a&quot;,&quot;long&quot;,&quot;bed&quot;,&quot;and&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;do&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;showed&quot;,&quot;it&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;said&quot;,&quot;,&quot;,&quot;\&quot;&quot;,&quot;Why&quot;,&quot;are&quot;,&quot;you&quot;,&quot;sad&quot;,&quot;?\&quot;&quot;,&quot;Tim&quot;,&quot;was&quot;,&quot;sad&quot;,&quot;and&quot;,&quot;strong&quot;,&quot;.&quot;,&quot;He&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;help&quot;,&quot;.&quot;,&quot;But&quot;,&quot;he&quot;,&quot;did&quot;,&quot;not&quot;,&quot;know&quot;,&quot;what&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;boy&quot;,&quot;named&quot;,&quot;Tim&quot;,&quot;.&quot;,&quot;He&quot;,&quot;loved&quot;,&quot;to&quot;,&quot;play&quot;,&quot;with&quot;,&quot;his&quot;,&quot;friends&quot;,&quot;.&quot;,&quot;One&quot;,&quot;day&quot;,&quot;,&quot;,&quot;Tim&quot;,&quot;saw&quot;,&quot;a&quot;,&quot;big&quot;,&quot;bird&quot;,&quot;in&quot;,&quot;his&quot;,&quot;park&quot;,&quot;.&quot;,&quot;He&quot;,&quot;was&quot;,&quot;a&quot;,&quot;big&quot;,&quot;,&quot;,&quot;white&quot;,&quot;dog&quot;,&quot;came&quot;,&quot;to&quot;,&quot;see&quot;,&quot;a&quot;,&quot;tree&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;and&quot;,&quot;Sam&quot;,&quot;went&quot;,&quot;to&quot;,&quot;play&quot;,&quot;with&quot;,&quot;the&quot;,&quot;tree&quot;,&quot;.&quot;,&quot;They&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;play&quot;,&quot;too&quot;,&quot;.&quot;,&quot;They&quot;,&quot;went&quot;,&quot;to&quot;,&quot;play&quot;,&quot;together&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;girl&quot;,&quot;named&quot;,&quot;Lucy&quot;,&quot;.&quot;,&quot;She&quot;,&quot;was&quot;,&quot;so&quot;,&quot;happy&quot;,&quot;.&quot;,&quot;She&quot;,&quot;had&quot;,&quot;lots&quot;,&quot;of&quot;,&quot;fun&quot;,&quot;.&quot;,&quot;And&quot;,&quot;then&quot;,&quot;,&quot;,&quot;she&quot;,&quot;saw&quot;,&quot;a&quot;,&quot;big&quot;,&quot;red&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;Lucy&quot;,&quot;was&quot;,&quot;lost&quot;,&quot;.&quot;,&quot;She&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;play&quot;,&quot;with&quot;,&quot;the&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;They&quot;,&quot;started&quot;,&quot;to&quot;,&quot;make&quot;,&quot;a&quot;,&quot;new&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;Lucy&quot;,&quot;was&quot;,&quot;happy&quot;,&quot;.&quot;,&quot;She&quot;,&quot;had&quot;,&quot;a&quot;,&quot;ball&quot;,&quot;,&quot;,&quot;and&quot;,&quot;it&quot;,&quot;was&quot;,&quot;very&quot;,&quot;happy&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;mouse&quot;,&quot;who&quot;,&quot;was&quot;,&quot;very&quot;,&quot;lonely&quot;,&quot;.&quot;,&quot;He&quot;,&quot;loved&quot;,&quot;to&quot;,&quot;play&quot;,&quot;together&quot;,&quot;,&quot;,&quot;and&quot;,&quot;the&quot;,&quot;mouse&quot;,&quot;would&quot;,&quot;fly&quot;,&quot;around&quot;,&quot;and&quot;,&quot;make&quot;,&quot;things&quot;,&quot;.&quot;,&quot;One&quot;,&quot;day&quot;,&quot;,&quot;,&quot;a&quot;,&quot;little&quot;,&quot;girl&quot;,&quot;named&quot;,&quot;Lucy&quot;,&quot;saw&quot;,&quot;a&quot;,&quot;big&quot;,&quot;rock&quot;,&quot;in&quot;,&quot;the&quot;,&quot;ground&quot;,&quot;.&quot;,&quot;She&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;wear&quot;,&quot;a&quot;,&quot;bird&quot;,&quot;.&quot;,&quot;there&quot;,&quot;lived&quot;,&quot;a&quot;,&quot;little&quot;,&quot;boy&quot;,&quot;named&quot;,&quot;Tim&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;had&quot;,&quot;a&quot;,&quot;toy&quot;,&quot;that&quot;,&quot;was&quot;,&quot;a&quot;,&quot;big&quot;,&quot;box&quot;,&quot;.&quot;,&quot;He&quot;,&quot;had&quot;,&quot;a&quot;,&quot;toy&quot;,&quot;box&quot;,&quot;.&quot;,&quot;He&quot;,&quot;had&quot;,&quot;a&quot;,&quot;toy&quot;,&quot;car&quot;,&quot;.&quot;,&quot;He&quot;,&quot;would&quot;,&quot;pretend&quot;,&quot;the&quot;,&quot;store&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;went&quot;,&quot;to&quot;,&quot;the&quot;,&quot;toy&quot;,&quot;.&quot;,&quot;He&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;touch&quot;,&quot;it&quot;,&quot;with&quot;,&quot;it&quot;,&quot;.&quot;,&quot;He&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;his&quot;,&quot;mom&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;walked&quot;,&quot;to&quot;,&quot;the&quot;,&quot;toy&quot;,&quot;.&quot;,&quot;He&quot;,&quot;went&quot;,&quot;to&quot;,&quot;play&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;big&quot;,&quot;,&quot;,&quot;blue&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;The&quot;,&quot;car&quot;,&quot;was&quot;,&quot;very&quot;,&quot;sad&quot;,&quot;.&quot;,&quot;The&quot;,&quot;car&quot;,&quot;loved&quot;,&quot;to&quot;,&quot;look&quot;,&quot;at&quot;,&quot;the&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;One&quot;,&quot;day&quot;,&quot;,&quot;,&quot;the&quot;,&quot;ball&quot;,&quot;started&quot;,&quot;to&quot;,&quot;play&quot;,&quot;.&quot;,&quot;He&quot;,&quot;went&quot;,&quot;for&quot;,&quot;his&quot;,&quot;car&quot;,&quot;.&quot;,&quot;He&quot;,&quot;felt&quot;,&quot;sad&quot;,&quot;.&quot;,&quot;The&quot;,&quot;car&quot;,&quot;felt&quot;,&quot;sad&quot;,&quot;or&quot;,&quot;lost&quot;,&quot;.&quot;]" data-astro-cid-r5v4z3ma></canvas><script type="module">var e=`400 14px "JetBrains Mono", Menlo, monospace`,t=.07,n=[[159,180,255],[168,230,237],[238,242,248]];for(let r of document.querySelectorAll(`.token-field`)){let i=JSON.parse(r.dataset.words??`[]`),a=r.getContext(`2d`),o=r.parentElement;if(!a||!o||!i.length)continue;let s=matchMedia(`(prefers-reduced-motion: reduce)`).matches,c=0,l=0,u=[],d=[],f=!0,p=0,m=0,h=0,g=null,_=()=>{let t=Math.min(devicePixelRatio||1,2);c=o.clientWidth,l=o.clientHeight,r.width=Math.round(c*t),r.height=Math.round(l*t),a.setTransform(t,0,0,t,0,0),a.font=e;let n=a.measureText(` `).width;u=[];for(let e=0;e*30<l+30;e++){let t=[],r=0,o=Math.floor(Math.random()*i.length);for(;r<c+200;){let e=i[o++%i.length],s=a.measureText(e).width;t.push({t:e,x:r,w:s}),r+=s+n*1.6}let s=(6+Math.random()*14)*(e%2?-1:1);u.push({toks:t,span:r,speed:s,off:Math.random()*r})}d=[];let s=o.querySelector(`[data-calm]`)?.getBoundingClientRect(),f=o.getBoundingClientRect();g=s?new DOMRect(s.x-f.x,s.y-f.y,s.width,s.height):null},v=()=>{a.clearRect(0,0,c,l),a.font=e,a.textBaseline=`middle`;let n=new Map;for(let e of d)n.set(`${e.row}:${e.tok}`,e);u.forEach((e,r)=>{let i=r*30+15,o=((e.off+m*e.speed)%e.span+e.span)%e.span;for(let s=-1;s<=0;s++)e.toks.forEach((l,u)=>{let d=l.x+o+s*e.span;if(d+l.w<0||d>c)return;let f=n.get(`${r}:${u}`);if(f){let e=(m-f.born)/1.8,n=t+.78*Math.max(0,1-e)**2;a.fillStyle=`rgb(${f.c.join(` `)} / ${n})`}else a.fillStyle=`rgb(171 173 176 / ${t})`;a.fillText(l.t,d,i)})}),a.globalCompositeOperation=`destination-in`;let r=a.createLinearGradient(0,0,0,l);if(r.addColorStop(0,`rgb(0 0 0 / 0)`),r.addColorStop(.18,`rgb(0 0 0 / 1)`),r.addColorStop(.82,`rgb(0 0 0 / 1)`),r.addColorStop(1,`rgb(0 0 0 / 0)`),a.fillStyle=r,a.fillRect(0,0,c,l),g){let e=g.x+g.width/2,t=g.y+g.height/2,n=Math.max(g.width,g.height)*.75;a.globalCompositeOperation=`destination-out`,a.save(),a.translate(e,t),a.scale(g.width/Math.max(g.width,g.height),g.height/Math.max(g.width,g.height));let r=a.createRadialGradient(0,0,0,0,0,n);r.addColorStop(0,`rgb(0 0 0 / 0.85)`),r.addColorStop(.65,`rgb(0 0 0 / 0.7)`),r.addColorStop(1,`rgb(0 0 0 / 0)`),a.fillStyle=r,a.fillRect(-n,-n,2*n,2*n),a.restore()}a.globalCompositeOperation=`source-over`},y=()=>{let e=Math.floor(Math.random()*u.length),t=u[e],r=((t.off+m*t.speed)%t.span+t.span)%t.span,i=e*30+15,a=e=>!!g&&e>g.x-40&&e<g.right+40&&i>g.y-20&&i<g.bottom+20,o=t.toks.map((e,t)=>[e.x+r,t]).filter(([e])=>e>0&&e<c-60&&!a(e)),s=o.length?o:t.toks.map((e,n)=>[e.x+r-t.span,n]).filter(([e])=>e>0&&e<c-60&&!a(e));if(!s.length)return;let[,l]=s[Math.floor(Math.random()*s.length)];d.push({row:e,tok:l,born:m,c:n[Math.floor(Math.random()*n.length)]})},b=e=>{if(!f||document.hidden)p=0;else{for(p&&(m+=Math.min(e-p,100)/1e3),p=e;m>=h;)y(),h=m+.12+Math.random()*.25;d=d.filter(e=>m-e.born<1.8),v(),requestAnimationFrame(b)}},x=()=>{s||!f||document.hidden||p||requestAnimationFrame(b)};document.fonts.ready.then(()=>{if(_(),s){for(let e=0;e<14;e++)y();v();return}new IntersectionObserver(([e])=>{f=e.isIntersecting,x()}).observe(o),document.addEventListener(`visibilitychange`,x);let e=0;new ResizeObserver(()=>{clearTimeout(e),e=window.setTimeout(()=>{(o.clientWidth!==c||o.clientHeight!==l)&&_()},150)}).observe(o)})}</script><div class="wrap split" data-astro-cid-crf4w3nd><div class="intro" data-calm data-astro-cid-crf4w3nd><h1 class="visually-hidden" data-astro-cid-crf4w3nd>mvGPT: Minimum Viable GPT: A Language Model from Scratch</h1><p class="pitch" data-astro-cid-crf4w3nd>Understand language models <span class="grad" data-astro-cid-crf4w3nd>from the ground up.</span></p><p class="sub" data-astro-cid-crf4w3nd>Define a GPT in PyTorch, then take it through the whole training pipeline, from pretraining to reinforcement learning, with the evaluation and metrics that show what it learned, and deploy it for anyone to talk to.</p><ol class="stages" aria-label="The pipeline" data-astro-cid-crf4w3nd><li data-astro-cid-crf4w3nd>define</li><li data-astro-cid-crf4w3nd>pretrain</li><li data-astro-cid-crf4w3nd>fine-tune</li><li data-astro-cid-crf4w3nd>deploy</li><li data-astro-cid-crf4w3nd>align</li></ol><p class="actions" data-astro-cid-crf4w3nd><a class="primary" href="https://www.youtube.com/playlist?list=PLR-9Y4UPbi8n5DURn9WMeMu3V_EJ7GD-A" data-astro-cid-crf4w3nd>Watch the series</a><a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-crf4w3nd>Read the code</a><a href="https://nenuadrian.github.io/mvGPT/" data-astro-cid-crf4w3nd>Docs</a></p></div><section class="try" id="try" aria-labelledby="try-title" data-astro-cid-ybp5n6jr><div class="head" data-astro-cid-ybp5n6jr><h2 id="try-title" data-astro-cid-ybp5n6jr>Talk to mvGPT</h2><div class="models" role="radiogroup" aria-label="Model" data-astro-cid-ybp5n6jr><label data-astro-cid-ybp5n6jr><input type="radio" name="model" value="sft" checked data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>14.6M, fine-tuned</span></label><label data-astro-cid-ybp5n6jr><input type="radio" name="model" value="big" data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>91M, pretrained on 4 GPUs</span></label></div><span class="state" data-astro-cid-ybp5n6jr>ep003-sft · 8-bit · in your browser</span></div><ol class="log" aria-live="polite" data-astro-cid-ybp5n6jr></ol><form class="compose" data-astro-cid-ybp5n6jr><div class="line features" role="group" aria-label="Features" data-astro-cid-ybp5n6jr><span class="key" data-astro-cid-ybp5n6jr>Features:</span><label data-astro-cid-ybp5n6jr><input type="checkbox" value="Dialogue" data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>Dialogue</span></label><label data-astro-cid-ybp5n6jr><input type="checkbox" value="BadEnding" data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>BadEnding</span></label><label data-astro-cid-ybp5n6jr><input type="checkbox" value="MoralValue" data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>MoralValue</span></label><label data-astro-cid-ybp5n6jr><input type="checkbox" value="Twist" data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>Twist</span></label><label data-astro-cid-ybp5n6jr><input type="checkbox" value="Foreshadowing" data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>Foreshadowing</span></label><label data-astro-cid-ybp5n6jr><input type="checkbox" value="Conflict" data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>Conflict</span></label></div><div class="line ask" data-astro-cid-ybp5n6jr><label class="key" for="try-prompt" data-astro-cid-ybp5n6jr>Summary:</label><input id="try-prompt" name="prompt" type="text" autocomplete="off" required maxlength="200" placeholder="A dog makes a new friend at the park." data-astro-cid-ybp5n6jr><button type="submit" data-astro-cid-ybp5n6jr>Write</button></div></form><p class="note" data-model="sft" data-astro-cid-ybp5n6jr>A summary, or a few words to use (<code data-astro-cid-ybp5n6jr>sun, kite, brave</code>), and it writes a children's story. It doesn't answer questions, and each message is a new story. The first one downloads the model, about 15&nbsp;MB, from <a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-ybp5n6jr>Hugging Face</a>.</p><p class="note" data-model="big" hidden data-astro-cid-ybp5n6jr>The beginning of a story, and it carries on. Six times the size, it trained for 30 minutes on four GPUs, on all of TinyStories, and wasn't fine-tuned, so it doesn't follow instructions. The first story downloads the model, about 92&nbsp;MB, from <a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-ybp5n6jr>Hugging Face</a>.</p></section><!-- Plain JavaScript, left as it is by Vite, so it imports the library from the CDN when asked. --><script type="module">
+  const LIBRARY = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1';
+  const MODEL = 'nenuadrian/mvGPT';
+  // Revisions of the model repo: each one's context window, and whether it was fine-tuned on instructions.
+  const MODELS = {
+    sft: { revision: 'ep003-sft', context: 256, instructions: true },
+    big: { revision: 'ep012-pretrain', context: 512, instructions: false },
+  };
+
+  const root = document.querySelector('#try');
+  const form = root.querySelector('.compose');
+  const log = root.querySelector('.log');
+  const state = root.querySelector('.state');
+  const input = form.querySelector('input[name=prompt]');
+  const key = form.querySelector('label.key');
+  const button = form.querySelector('button');
+  const featureLine = form.querySelector('.features');
+  const notes = root.querySelectorAll('.note');
+
+  // The library, loaded on the first message, and each model on its own first message.
+  let library = null;
+  const writers = {};
+
+  function chosen() {
+    return root.querySelector('.models input:checked').value;
+  }
+
+  function idle() {
+    return `${MODELS[chosen()].revision} · 8-bit · in your browser`;
+  }
+
+  // mvGPT's detokenize: punctuation goes against the word before it.
+  function detokenize(tokens) {
+    return tokens
+      .join(' ')
+      .replace(/ ([.,!?;:]\S*)/g, '$1')
+      .replace(/(\w) ' (\w)/g, "$1'$2")
+      .replace(/(^|\s)" /g, '$1"');
+  }
+
+  // A list of short words is the words to use, and anything else the story's summary.
+  function words(text) {
+    const parts = text.split(',').map((part) => part.trim()).filter(Boolean);
+    const list = parts.length > 1 && parts.every((part) => part.split(/\s+/).length <= 2) && !/[.!?]$/.test(text);
+    return list ? parts : null;
+  }
+
+  // The instruction's lines, in the order the model was fine-tuned on.
+  function instruction(text, features) {
+    const list = words(text);
+    const lines = features.length ? [['Features', features.join(', ')]] : [];
+    lines.push(list ? ['Words', list.join(', ')] : ['Summary', /[.!?]$/.test(text) ? text : `${text}.`]);
+    return [...lines, ['Story', '']];
+  }
+
+  // The label follows what's typed and the model chosen, so the visitor sees what the model will be given.
+  function label() {
+    if (!MODELS[chosen()].instructions) return 'Begin:';
+    return words(input.value) ? 'Words:' : 'Summary:';
+  }
+  input.addEventListener('input', () => {
+    key.textContent = label();
+  });
+
+  for (const radio of root.querySelectorAll('.models input')) {
+    radio.addEventListener('change', () => {
+      const instructions = MODELS[chosen()].instructions;
+      featureLine.hidden = !instructions;
+      input.placeholder = instructions ? 'A dog makes a new friend at the park.' : 'Once upon a time, a little fox';
+      for (const note of notes) note.hidden = note.dataset.model !== chosen();
+      key.textContent = label();
+      if (!button.disabled) state.textContent = idle();
+    });
+  }
+
+  // An instruction shows as its lines, and the beginning of a story as the story's first words.
+  function entry(lines, given) {
+    const item = document.createElement('li');
+    const story = document.createElement('p');
+    story.className = 'story writing';
+    if (lines) {
+      const sent = document.createElement('pre');
+      for (const [name, value] of lines) {
+        const line = document.createElement('span');
+        const label = document.createElement('b');
+        label.textContent = `${name}:`;
+        line.append(label, value ? ` ${value}` : '', '\n');
+        sent.append(line);
+      }
+      item.append(sent);
+    } else {
+      const start = document.createElement('span');
+      start.className = 'given';
+      start.textContent = given;
+      story.append(start);
+    }
+    const more = document.createElement('span');
+    story.append(more);
+    const meta = document.createElement('p');
+    meta.className = 'meta';
+    item.append(story, meta);
+    log.append(item);
+    log.scrollTop = log.scrollHeight;
+    return { story, more, meta };
+  }
+
+  async function load(name, meta) {
+    if (!library) {
+      meta.textContent = 'downloading the library…';
+      library = await import(LIBRARY);
+    }
+    writers[name] = await library.pipeline('text-generation', MODEL, {
+      revision: MODELS[name].revision,
+      dtype: 'q8',
+      progress_callback: (p) => {
+        if (p.status === 'progress' && p.file?.endsWith('.onnx')) {
+          meta.textContent = `downloading mvGPT ${Math.round(p.progress ?? 0)}%`;
+        }
+      },
+    });
+  }
+
+  async function write(name, prompt, more, meta) {
+    if (!writers[name]) await load(name, meta);
+    const writer = writers[name];
+    meta.textContent = '';
+    state.textContent = 'writing…';
+
+    const ids = [];
+    let count = 0;
+    const streamer = new library.TextStreamer(writer.tokenizer, {
+      skip_prompt: true,
+      callback_function: () => {},
+      token_callback_function: (tokens) => {
+        ids.push(...tokens);
+        count += 1;
+        if (MODELS[name].instructions) {
+          // The word-level tokenizer drops whitespace, which mvGPT's detokenize puts back.
+          const pieces = ids.map((id) => writer.tokenizer.decode([id], { skip_special_tokens: true }));
+          more.textContent = detokenize(pieces.filter(Boolean));
+        } else {
+          // BPE keeps every byte, spaces and new lines included, so the tokens decode as they are.
+          more.textContent = writer.tokenizer.decode(ids, { skip_special_tokens: true });
+        }
+        log.scrollTop = log.scrollHeight;
+      },
+    });
+    const start = performance.now();
+    // The context window holds the prompt and the story together.
+    const max_new_tokens = Math.min(200, MODELS[name].context - writer.tokenizer.encode(prompt).length);
+    await writer(prompt, { max_new_tokens, do_sample: true, temperature: 0.8, top_k: 50, streamer });
+    const seconds = (performance.now() - start) / 1000;
+    meta.textContent = `${count} tokens · ${seconds.toFixed(1)} s · ${Math.round(count / seconds)} tokens/s`;
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    const name = chosen();
+    let prompt;
+    let shown;
+    if (MODELS[name].instructions) {
+      const features = [...form.querySelectorAll('.features input:checked')].map((box) => box.value);
+      const lines = instruction(text, features);
+      prompt = lines.map(([line, value]) => (value ? `${line}: ${value}` : `${line}:`)).join('\n');
+      shown = entry(lines);
+    } else {
+      prompt = text;
+      shown = entry(null, text);
+    }
+    input.value = '';
+    key.textContent = label();
+    button.disabled = true;
+    try {
+      await write(name, prompt, shown.more, shown.meta);
+    } catch (error) {
+      shown.meta.textContent = `something went wrong: ${error.message}`;
+      shown.meta.classList.add('error');
+    }
+    shown.story.classList.remove('writing');
+    state.textContent = idle();
+    button.disabled = false;
+    input.focus();
+  });
+</script></div></header><main class="wrap with-topics" id="episodes" data-astro-cid-lcdefpme><h2 class="section-title" data-astro-cid-lcdefpme>Episodes</h2><aside aria-labelledby="topics" data-astro-cid-lcdefpme><h3 class="section-title topics-title" id="topics" data-astro-cid-lcdefpme>Topics</h3><ul class="topics" data-astro-cid-lcdefpme><li data-astro-cid-lcdefpme><a href="/#episodes" data-topic="" aria-current="true" data-astro-cid-lcdefpme>All <span class="n" data-astro-cid-lcdefpme>24</span></a></li><li data-astro-cid-lcdefpme><a href="/?topic=architecture#episodes" data-topic="architecture" data-astro-cid-lcdefpme>Architecture <span class="n" data-astro-cid-lcdefpme>6</span></a></li><li data-astro-cid-lcdefpme><a href="/?topic=pretraining#episodes" data-topic="pretraining" data-astro-cid-lcdefpme>Pretraining <span class="n" data-astro-cid-lcdefpme>5</span></a></li><li data-astro-cid-lcdefpme><a href="/?topic=fine-tuning#episodes" data-topic="fine-tuning" data-astro-cid-lcdefpme>Fine-tuning <span class="n" data-astro-cid-lcdefpme>3</span></a></li><li data-astro-cid-lcdefpme><a href="/?topic=reinforcement-learning#episodes" data-topic="reinforcement-learning" data-astro-cid-lcdefpme>Reinforcement learning <span class="n" data-astro-cid-lcdefpme>3</span></a></li><li data-astro-cid-lcdefpme><a href="/?topic=inference#episodes" data-topic="inference" data-astro-cid-lcdefpme>Inference <span class="n" data-astro-cid-lcdefpme>5</span></a></li><li data-astro-cid-lcdefpme><a href="/?topic=performance#episodes" data-topic="performance" data-astro-cid-lcdefpme>Performance <span class="n" data-astro-cid-lcdefpme>4</span></a></li><li data-astro-cid-lcdefpme><a href="/?topic=agents#episodes" data-topic="agents" data-astro-cid-lcdefpme>Agents <span class="n" data-astro-cid-lcdefpme>3</span></a></li></ul><p class="visually-hidden" aria-live="polite" data-shown data-astro-cid-lcdefpme></p></aside><ol class="grid" data-astro-cid-lcdefpme><li data-topics="architecture" data-astro-cid-lcdefpme><a class="card" href="/ep001-architecture/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/Vff1s2GzI_o/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/Vff1s2GzI_o/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>Build a GPT from scratch in PyTorch</h3><p class="sub" data-astro-cid-p5rwydxy>A small GPT written from scratch in PyTorch, from its parameters to how a prompt flows through it to the next token.</p><p class="meta" data-astro-cid-p5rwydxy>32 min</p></div></a></li><li data-topics="pretraining" data-astro-cid-lcdefpme><a class="card" href="/ep002-pretraining/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/KA0aVTQ5Wak/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/KA0aVTQ5Wak/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>Pretraining a GPT from scratch in PyTorch</h3><p class="sub" data-astro-cid-p5rwydxy>From random tokens to short stories in a first training run on a laptop, with a tokenizer, the next-token objective, a training loop and evaluation written from scratch.</p><p class="meta" data-astro-cid-p5rwydxy>27 min</p></div></a></li><li data-topics="fine-tuning" data-astro-cid-lcdefpme><a class="card" href="/ep003-sft/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/WUsVr66Bgq0/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/WUsVr66Bgq0/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>SFT: fine-tuning a GPT to follow instructions</h3><p class="sub" data-astro-cid-p5rwydxy>Our pretrained model learns to write the story an instruction asks for, with a loss on the story alone, and we measure how much better it follows instructions.</p><p class="meta" data-astro-cid-p5rwydxy>27 min</p></div></a></li><li data-topics="inference performance" data-astro-cid-lcdefpme><a class="card" href="/ep004-kv-cache/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/JPlzOZouQxQ/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/JPlzOZouQxQ/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>KV cache from scratch in PyTorch</h3><p class="sub" data-astro-cid-p5rwydxy>We add a KV cache to our model, so it runs each new token on its own and not the whole story again, and we check and time it on the CPU and the GPU.</p><p class="meta" data-astro-cid-p5rwydxy>20 min</p></div></a></li><li data-topics="inference" data-astro-cid-lcdefpme><a class="card" href="/ep005-deploy/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/rn72Y_9dVE0/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/rn72Y_9dVE0/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>Deploy a GPT: Hugging Face, Gradio, a browser</h3><p class="sub" data-astro-cid-p5rwydxy>We save our model as a GPT-2 and push it to the Hugging Face Hub, with a tag per episode, serve it from a Gradio app on a VPS, and run it in the browser with Transformers.js.</p><p class="meta" data-astro-cid-p5rwydxy>28 min</p></div></a></li><li data-topics="performance" data-astro-cid-lcdefpme><a class="card" href="/ep006-profiling/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/7C0USj9KtI0/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/7C0USj9KtI0/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>Profiling a GPT with PyTorch&#39;s profiler</h3><p class="sub" data-astro-cid-p5rwydxy>We look at our model as a graph of operations in Model Explorer, profile it with PyTorch&#39;s profiler, and measure how decisions in its code change its speed on a CPU and a GPU.</p><p class="meta" data-astro-cid-p5rwydxy>18 min</p></div></a></li><li data-topics="reinforcement-learning" data-astro-cid-lcdefpme><a class="card" href="/ep007-dpo/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/aQ4WxQfB2S4/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/aQ4WxQfB2S4/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>DPO: teaching a GPT from preferences</h3><p class="sub" data-astro-cid-p5rwydxy>With direct preference optimisation, our fine-tuned model learns from pairs of its own stories, where the one that uses more of the words asked for is preferred, and we measure what it gains and what it costs.</p><p class="meta" data-astro-cid-p5rwydxy>17 min</p></div></a></li><li data-topics="reinforcement-learning" data-astro-cid-lcdefpme><a class="card" href="/ep008-ppo/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/8ewa70rUPME/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/8ewa70rUPME/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>PPO: reinforcement learning for a GPT</h3><p class="sub" data-astro-cid-p5rwydxy>Our model learns from its own stories, scored as it writes them, with proximal policy optimisation, a critic and a penalty for drifting, and we measure it next to DPO.</p><p class="meta" data-astro-cid-p5rwydxy>22 min</p></div></a></li><li data-topics="fine-tuning" data-astro-cid-lcdefpme><a class="card" href="/ep009-lora/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/m5THIkAJJFk/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/m5THIkAJJFk/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>LoRA: fine-tuning a GPT with 2% of its weights</h3><p class="sub" data-astro-cid-p5rwydxy>We fine-tune our model on instructions again with LoRA, which freezes its weights and trains a small low-rank update beside them, and measure what it saves and what it learns against full fine-tuning.</p><p class="meta" data-astro-cid-p5rwydxy>15 min</p></div></a></li><li data-topics="architecture" data-astro-cid-lcdefpme><a class="card" href="/ep010-rope/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/CVeEPW67Gv8/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/CVeEPW67Gv8/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>RoPE: rotary position embeddings from scratch</h3><p class="sub" data-astro-cid-p5rwydxy>We replace our model&#39;s table of positions with rotary position embeddings, which turn each query and key by its position, so attention scores depend on how far apart two tokens are, and the KV cache can slide past the context window.</p><p class="meta" data-astro-cid-p5rwydxy>17 min</p></div></a></li><li data-topics="pretraining" data-astro-cid-lcdefpme><a class="card" href="/ep011-bpe/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/_o0mJYWdKQQ/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/_o0mJYWdKQQ/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>BPE in C++: a byte-level tokenizer for a GPT</h3><p class="sub" data-astro-cid-p5rwydxy>We write a byte-level BPE tokenizer in C++, test it against a Python reference, pretrain our model on the stories in BPE, and compare the two tokenizers&#39; models in bits per character.</p><p class="meta" data-astro-cid-p5rwydxy>32 min</p></div></a></li><li data-topics="pretraining performance" data-astro-cid-lcdefpme><a class="card" href="/ep012-distributed/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/5-RJVvuGZyE/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/5-RJVvuGZyE/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>Distributed training in PyTorch: 4 GPUs, DDP</h3><p class="sub" data-astro-cid-p5rwydxy>We pretrain a model about six times bigger, in GPT-2 small&#39;s shape, on four RTX 4090s rented by the hour, with PyTorch&#39;s DistributedDataParallel, and measure how the speed scales from one GPU to four, and how much better the model gets in thirty minutes.</p><p class="meta" data-astro-cid-p5rwydxy>29 min</p></div></a></li><li data-topics="performance" data-astro-cid-lcdefpme><a class="card" href="/ep013-flash-attention/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/HEYzYWquKos/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/HEYzYWquKos/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>Flash attention from scratch: PyTorch, Triton</h3><p class="sub" data-astro-cid-p5rwydxy>We write attention without its table of scores, first in PyTorch on the Mac, then as a Triton kernel on a rented NVIDIA GPU, forwards and backwards, and measure it against the FlashAttention-2 inside PyTorch.</p><p class="meta" data-astro-cid-p5rwydxy>39 min</p></div></a></li><li data-topics="inference" data-astro-cid-lcdefpme><a class="card" href="/ep014-serving/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/6XGhd_83uwU/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/6XGhd_83uwU/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>Batching: serving a GPT to many users at once</h3><p class="sub" data-astro-cid-p5rwydxy>We serve the model as an API in the shape of OpenAI&#39;s completions, measure it against a crowd of players from a game, write the stories for the requests that arrive together as a batch, and run it in Docker, with vLLM as the alternative.</p><p class="meta" data-astro-cid-p5rwydxy>25 min</p></div></a></li><li data-topics="architecture" data-astro-cid-lcdefpme><a class="card" href="/ep015-diffusion/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/LVWHstzgqE4/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/LVWHstzgqE4/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>Text diffusion: a GPT that writes all at once</h3><p class="sub" data-astro-cid-p5rwydxy>We turn our GPT into a masked diffusion model, which writes a story by unhiding it, train it on the laptop and on four rented GPUs, start one from our next-token models&#39; weights, and measure it against next-token prediction, comparing our code with LLaDA&#39;s, which trains this recipe at 8 billion parameters.</p><p class="meta" data-astro-cid-p5rwydxy>34 min</p></div></a></li><li data-topics="reinforcement-learning" data-astro-cid-lcdefpme><a class="card" href="/ep016-grpo/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/SoFl6r8Qz-0/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/SoFl6r8Qz-0/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>GRPO: reinforcement learning without a critic</h3><p class="sub" data-astro-cid-p5rwydxy>Our model writes eight stories per instruction, and each is scored against the others, in place of PPO&#39;s critic, with group relative policy optimisation, the reinforcement learning behind DeepSeek-R1.</p><p class="meta" data-astro-cid-p5rwydxy>22 min</p></div></a></li><li data-topics="architecture" data-astro-cid-lcdefpme><a class="card" href="/ep017-modern-block/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/cPiQO4AilGY/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/cPiQO4AilGY/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>RMSNorm, SwiGLU, QK-norm: a modern GPT block</h3><p class="sub" data-astro-cid-p5rwydxy>We bring our GPT&#39;s transformer block up to date with RMSNorm, SwiGLU, QK-norm and no biases, the changes recent open models made to it, each behind a config flag, with tests, and work out what they do to the parameter count.</p><p class="meta" data-astro-cid-p5rwydxy>36 min</p></div></a></li><li data-topics="architecture inference" data-astro-cid-lcdefpme><a class="card" href="/ep018-gqa/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/SpKMenz36TM/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/SpKMenz36TM/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>Grouped-query attention: a smaller KV cache</h3><p class="sub" data-astro-cid-p5rwydxy>We give our model grouped-query attention, where the query heads share their keys and values in groups, so the KV cache keeps fewer heads, and we check it against the attention we had and work out what it saves.</p><p class="meta" data-astro-cid-p5rwydxy>22 min</p></div></a></li><li data-topics="pretraining" data-astro-cid-lcdefpme><a class="card" href="/ep019-web/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/15vafg1wdpI/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/15vafg1wdpI/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>Pretraining on the web: a GPT overnight</h3><p class="sub" data-astro-cid-p5rwydxy>We pretrain a model in GPT-2 small&#39;s shape on educational web pages for a whole night, on one RTX 4090 rented for under four dollars, and measure it against GPT-2 small on HellaSwag.</p><p class="meta" data-astro-cid-p5rwydxy>27 min</p></div></a></li><li data-topics="fine-tuning agents" data-astro-cid-lcdefpme><a class="card" href="/ep020-tools/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/UrlqjWEuYH4/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/UrlqjWEuYH4/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>LLM tool calling from scratch: a calculator</h3><p class="sub" data-astro-cid-p5rwydxy>We fine-tune the model we pretrained on the web to call a calculator, in plain text, and measure how often it calls it right, on questions asked the way training asks and in new ways, with the calculator and without it.</p><p class="meta" data-astro-cid-p5rwydxy>21 min</p></div></a></li><li data-topics="agents" data-astro-cid-lcdefpme><a class="card" href="/ep021-agent/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/9SYXGDioA6g/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/9SYXGDioA6g/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>AI agent from scratch, with subagents</h3><p class="sub" data-astro-cid-p5rwydxy>We fine-tune our web model into an agent that writes files and hands work to subagents, each a fresh context of the same model, and measure what the subagents buy.</p><p class="meta" data-astro-cid-p5rwydxy>23 min</p></div></a></li><li data-topics="architecture inference" data-astro-cid-lcdefpme><a class="card" href="/ep022-long-context/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/2C2JYv2agzo/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/2C2JYv2agzo/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>Long context LLM: stretching RoPE with YaRN</h3><p class="sub" data-astro-cid-p5rwydxy>We stretch the rotary embeddings of our web model to read four times its window, four ways and then with fifteen minutes of fine-tuning, and measure the loss by position and a pass key hidden in filler.</p><p class="meta" data-astro-cid-p5rwydxy>39 min</p></div></a></li><li data-topics="pretraining" data-astro-cid-lcdefpme><a class="card" href="/ep023-optimizers/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/0ysdFCrmdlU/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/0ysdFCrmdlU/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>Muon vs AdamW, Lion and Sophia: a fair race</h3><p class="sub" data-astro-cid-p5rwydxy>We write AdamW from scratch, then race it against Lion, Sophia and Muon on our stories model, each with its own sweep of the learning rate, and measure the steps, the time and the memory each needs.</p><p class="meta" data-astro-cid-p5rwydxy>46 min</p></div></a></li><li data-topics="agents" data-astro-cid-lcdefpme><a class="card" href="/ep024-knowledge-graph/" data-astro-cid-p5rwydxy><div class="thumb" data-astro-cid-p5rwydxy><img src="https://i.ytimg.com/vi/NxeRk1Q8LXY/maxresdefault.jpg" alt="" loading="lazy" decoding="async" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/NxeRk1Q8LXY/hqdefault.jpg'" data-astro-cid-p5rwydxy></div><div class="body" data-astro-cid-p5rwydxy><h3 data-astro-cid-p5rwydxy>Text to Cypher: our GPT asks a graph database</h3><p class="sub" data-astro-cid-p5rwydxy>We fine-tune our agent to write Cypher queries for smollerGraph, the graph database built in our sibling series, and to answer from what comes back, then measure it with the graph and without.</p><p class="meta" data-astro-cid-p5rwydxy>27 min</p></div></a></li></ol></main><script type="module">var e=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5].map(e=>(e+.5)/16),t=(e,t,n=0)=>{let r=Math.sin(e*127.1+t*311.7+n*74.7)*43758.5453;return r-Math.floor(r)},n=e=>e*e*(3-2*e);function r(e,r){let i=Math.floor(e),a=Math.floor(r),o=n(e-i),s=n(r-a),c=t(i,a),l=t(i+1,a),u=t(i,a+1),d=t(i+1,a+1);return c+(l-c)*o+(u-c)*s+(c-l-u+d)*o*s}function i(e,t){let n=0,i=.5;for(let a=0;a<4;a++)n+=i*r(e,t),e=e*2.03+17.1,t=t*2.03+9.2,i*=.5;return n/.9375}var a=(e,t,r)=>n(Math.max(0,Math.min(1,(e-t)/(r-t)))),o=(e,t)=>e===`left`?.1+.9*a(t,.35,.8):e===`center`?.08+.92*a(Math.abs(t-.5)*2,.5,.95):1,s=e=>3+e*7.3;function c({cols:t,rows:n,shades:r,seed:a=0,calm:c=`even`,t:l=s(a)}){let u=t/n,d=new Uint8Array(t*n);for(let s=0;s<n;s++)for(let f=0;f<t;f++){let p=f/t*u*1.15+a*13.7,m=s/n*1.15+a*5.3,h=i(p+l*.04,m-l*.02),g=i(p+4*h+l*.06,m+4*h-l*.05),_=Math.max(0,Math.min(1,(g-.3)/.32)),v=Math.exp(-(((_-.62)/.05)**2)),y=(_**1.9+.7*v)*o(c,f/(t-1))*(r-1)+e[s%4*4+f%4]-.5;d[s*t+f]=Math.max(0,Math.min(r-1,Math.round(y)))}return d}function l({cols:e,rows:n,ember:r,seed:i=0,calm:a=`even`,t:s}){let c=[];for(let l=0;l<Math.round(e*n/90);l++){let u=1.2+2.8*t(l,1,i),d=n+8,f=Math.floor(d-(s*u+t(l,2,i)*d)%d)-4,p=Math.floor(t(l,3,i)*e+Math.sin(s*1.3+l)*1.5);f<0||f>=n||p<0||p>=e||o(a,p/e)<.7||t(l,4,i)>o(a,p/e)||t(l,Math.floor(s*8),i)<.18||c.push({x:p,y:f,color:r[l%r.length]})}return c}var u=120,d=36,f=20;function p(e,{field:t,ember:n}){let r=t.map(e=>[1,3,5].map(t=>parseInt(e.slice(t,t+2),16))),i=Number(e.dataset.seed??0),a=e.dataset.calm??`even`,o=document.createElement(`canvas`);o.className=`field-anim`,o.width=u,o.height=d,o.setAttribute(`aria-hidden`,`true`);let p=o.getContext(`2d`);if(!p)return;let m=p.createImageData(u,d),h=s(i),g=0,_=0,v=!1,y=!0,b=e=>{let o=c({cols:u,rows:d,shades:t.length,seed:i,calm:a,t:e});for(let e=0;e<o.length;e++){let[t,n,i]=r[o[e]];m.data.set([t,n,i,255],e*4)}p.putImageData(m,0,0);for(let t of l({cols:u,rows:d,ember:n,seed:i,calm:a,t:e-h}))p.fillStyle=t.color,p.fillRect(t.x,t.y,1,1)},x=e=>{!y||document.hidden?v=!1:(_&&(g+=Math.min(e-_,100)/1e3),_=e,b(h+g),setTimeout(()=>requestAnimationFrame(x),1e3/f))},S=()=>{v||!y||document.hidden||(v=!0,_=0,requestAnimationFrame(x))};b(h),e.prepend(o),new IntersectionObserver(([e])=>{y=e.isIntersecting,S()}).observe(e),document.addEventListener(`visibilitychange`,S)}var m=document.body.dataset.palette;if(m&&!matchMedia(`(prefers-reduced-motion: reduce)`).matches){let e=JSON.parse(m);document.querySelectorAll(`.field[data-seed]`).forEach(t=>p(t,e))}var h=document.querySelector(`.bar`);if(h){let e=window.scrollY,t=!1,n=()=>{t=!1;let n=Math.max(0,window.scrollY);h.classList.toggle(`solid`,n>0),n<=h.offsetHeight?(h.classList.remove(`away`),e=n):Math.abs(n-e)>4&&(h.classList.toggle(`away`,n>e),e=n)};window.addEventListener(`scroll`,()=>{t||(t=!0,requestAnimationFrame(n))},{passive:!0}),n(),new ResizeObserver(()=>document.documentElement.style.setProperty(`--bar-h`,`${h.offsetHeight}px`)).observe(h)}</script><footer class="foot" data-astro-cid-hkbrpulz><div class="wrap foot-inner" data-astro-cid-hkbrpulz><span data-astro-cid-hkbrpulz>mvGPT – Building a Minimum Viable GPT, A Language Model from Scratch</span><nav aria-label="Elsewhere" data-astro-cid-hkbrpulz><a href="/about/" data-astro-cid-hkbrpulz>About</a><a href="https://www.youtube.com/playlist?list=PLR-9Y4UPbi8n5DURn9WMeMu3V_EJ7GD-A" data-astro-cid-hkbrpulz>YouTube</a><a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>The code on GitHub</a><a href="https://nenuadrian.github.io/mvGPT/" data-astro-cid-hkbrpulz>Docs</a><a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>The models on Hugging Face</a><a href="/rss.xml" data-astro-cid-hkbrpulz>RSS</a></nav></div></footer></body></html><script type="module">var e=[...document.querySelectorAll(`a[data-topic]`)],t=[...document.querySelectorAll(`li[data-topics]`)],n=document.querySelector(`[data-shown]`);function r(r){let i=e.find(e=>e.dataset.topic===r)??e[0],a=0;for(let e of t)e.hidden=!!i.dataset.topic&&!e.dataset.topics.split(` `).includes(i.dataset.topic),e.hidden||a++;for(let t of e)t===i?t.setAttribute(`aria-current`,`true`):t.removeAttribute(`aria-current`);n&&(n.textContent=`${a} episode${a===1?``:`s`}${i.dataset.topic?`: ${i.firstChild.textContent.trim()}`:``}`)}if(e.length){for(let t of e)t.addEventListener(`click`,e=>{if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button!==0)return;e.preventDefault(),r(t.dataset.topic);let n=new URL(location.href);t.dataset.topic?n.searchParams.set(`topic`,t.dataset.topic):n.searchParams.delete(`topic`),history.replaceState(null,``,n)});r(new URLSearchParams(location.search).get(`topic`)??``)}</script>

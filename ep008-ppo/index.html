@@ -1,0 +1,356 @@
+<!DOCTYPE html><html lang="en-GB" data-astro-cid-hkbrpulz><head><script async src="https://www.googletagmanager.com/gtag/js?id=G-F16ZZFP5E4"></script><script>window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', "G-F16ZZFP5E4");</script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PPO: reinforcement learning for a GPT | mvGPT</title><meta name="description" content="Our model learns from its own stories, scored as it writes them, with proximal policy optimisation, a critic and a penalty for drifting, and we measure it next to DPO."><link rel="canonical" href="https://mvgpt.nenuadrian.com/ep008-ppo/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="alternate" type="application/rss+xml" title="mvGPT" href="/rss.xml"><link rel="sitemap" href="/sitemap.xml"><meta name="theme-color" content="#101215"><meta property="og:site_name" content="mvGPT"><meta property="og:type" content="video.episode"><meta property="og:title" content="PPO: reinforcement learning for a GPT"><meta property="og:description" content="Our model learns from its own stories, scored as it writes them, with proximal policy optimisation, a critic and a penalty for drifting, and we measure it next to DPO."><meta property="og:url" content="https://mvgpt.nenuadrian.com/ep008-ppo/"><meta property="og:locale" content="en_GB"><meta property="og:image" content="https://i.ytimg.com/vi/8ewa70rUPME/maxresdefault.jpg"><meta property="og:image:alt" content="PPO: reinforcement learning for a GPT | Minimum Viable GPT #8"><meta name="twitter:card" content="summary_large_image"><style>@font-face{font-family:"aphrodite-display";src:url("/fonts/display-SpaceGrotesk-Medium.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"aphrodite-display";src:url("/fonts/display-SpaceGrotesk-Bold.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+:root{--bg:#101215;--bg-rgb:16 18 21;--surface:#14171b;--surface-2:#191d22;--line:#1f242b;--shadow:#272d36;--text:#e8ecf2;--heading:#eef2f8;--prose:#d8dce2;--muted:#a6aab0;--faint:#81868d;--ember:#9fb4ff;--ember-2:#a8e6ed;--on-ember:#14171b;--code:#9FB4FF;--font-display:"aphrodite-display", var(--font-ui);--font-ui:"Inter", -apple-system, 'Helvetica Neue', sans-serif;--font-mono:"JetBrains Mono", Menlo, monospace;--font-hand:"Caveat", 'Comic Sans MS', cursive}</style><style>/* mvGPT's website on top of aphrodite's: a near-black slate, a soft glow, titles in a periwinkle ->
+   white -> mint ramp, Space Grotesk throughout. aphrodite's own rules are in a cascade layer, so
+   these win over them; its markup is the same for both series, and site/components/ holds what's
+   mvGPT's alone (the brand, the heroes, the token field, the model to try, the player's icons). */
+
+/* Space Grotesk (public/fonts/, from @fontsource/space-grotesk 5.3.0, OFL). */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(/fonts/space-grotesk-latin-ext-400-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(/fonts/space-grotesk-latin-400-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(/fonts/space-grotesk-latin-ext-500-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(/fonts/space-grotesk-latin-500-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(/fonts/space-grotesk-latin-ext-600-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(/fonts/space-grotesk-latin-600-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(/fonts/space-grotesk-latin-ext-700-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(/fonts/space-grotesk-latin-700-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+:root {
+  --bg: #101215;
+  --bg-rgb: 16 18 21;
+  --surface: #15181c;
+  --surface-2: #1b1f24;
+  --line: #262a31;
+  --text: #e8ecf2;
+  --heading: var(--text);
+  --prose: #cfd3da;
+  --muted: #abadb0;
+  --faint: #7d8087;
+  --peri: #9fb4ff;
+  --white: #eef2f8;
+  --mint: #a8e6ed;
+  --brace: #8b9de8;
+  --ember: var(--peri);
+  --ember-2: var(--mint);
+  --on-ember: #101215;
+  --on-accent: #101215;
+  --code: var(--mint);
+  --grad: linear-gradient(100deg, var(--peri) 0%, var(--white) 50%, var(--mint) 100%);
+  --font-display: 'Space Grotesk', -apple-system, 'Helvetica Neue', sans-serif;
+  --font-ui: var(--font-display);
+  --font-mono: 'JetBrains Mono', Menlo, monospace;
+  /* The names our own parts use. */
+  --display: var(--font-display);
+  --ui: var(--font-ui);
+  --mono: var(--font-mono);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1.1;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: inherit;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  text-shadow: none;
+}
+
+/* Gradient title text, as on the thumbnails. */
+.grad {
+  width: fit-content;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Kicker tags: small mono labels in thin outlines, the first in periwinkle. */
+.tags {
+  gap: 8px;
+}
+.tags > *,
+.tags > :last-child {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: rgb(16 18 21 / 0.6);
+}
+.tags > :first-child {
+  border-color: rgb(159 180 255 / 0.45);
+  color: var(--peri);
+}
+
+/* A hero with the soft glow behind its title. */
+.glow {
+  position: relative;
+  isolation: isolate;
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+.glow::before {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  inset: -30% -10% -30% 25%;
+  background:
+    radial-gradient(closest-side at 55% 50%, rgb(159 180 255 / 0.1), transparent),
+    radial-gradient(closest-side at 75% 55%, rgb(168 230 237 / 0.06), transparent);
+  pointer-events: none;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+}
+
+/* The bar: in the page's flow, frosted, sliding away while scrolling down. */
+.bar,
+.bar.solid {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgb(16 18 21 / 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+  transition: transform 200ms ease;
+}
+.bar-inner {
+  padding-block: 14px;
+}
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+  text-shadow: none;
+}
+.curly {
+  color: var(--brace);
+  font-weight: 400;
+}
+.curly:first-child {
+  margin-right: 0.08em;
+}
+.curly:last-child {
+  margin-left: 0.08em;
+}
+.bar nav {
+  flex-wrap: nowrap;
+  gap: clamp(14px, 3vw, 28px);
+}
+.bar nav a {
+  color: var(--muted);
+}
+.bar nav a:hover {
+  color: var(--white);
+}
+@media (max-width: 480px) {
+  .bar nav {
+    gap: 12px;
+  }
+  .bar nav a {
+    white-space: nowrap;
+    font-size: 0.88rem;
+  }
+}
+
+/* Episode cards: lifting with a glow. */
+.card {
+  overflow: hidden;
+  box-shadow: none;
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+.card:hover {
+  border-color: rgb(159 180 255 / 0.5);
+  box-shadow: 0 10px 40px -12px rgb(159 180 255 / 0.25);
+  transform: translateY(-2px);
+}
+.card .placeholder {
+  background: radial-gradient(closest-side, rgb(159 180 255 / 0.1), transparent) var(--bg);
+}
+.card .placeholder span,
+.player.draft .display {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.card .placeholder span {
+  font-size: clamp(1.5rem, 3.4vw, 2rem);
+}
+.card .tags > * {
+  font-size: 0.78rem;
+  border-width: 1px;
+}
+.card h3 {
+  font-weight: 600;
+}
+
+/* The player: square, with a square play button, and a mini player that pops in. */
+.player {
+  overflow: hidden;
+  box-shadow: 0 20px 60px -24px rgb(159 180 255 / 0.25);
+}
+.player.draft {
+  background: radial-gradient(closest-side, rgb(159 180 255 / 0.1), transparent) var(--bg);
+}
+.player.draft p {
+  background: none;
+}
+.screen.docked {
+  z-index: 4;
+  animation: pop 180ms ease-out;
+}
+.docked .frame {
+  box-shadow:
+    0 18px 48px -12px rgb(0 0 0 / 0.7),
+    0 0 0 1px rgb(159 180 255 / 0.12);
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen.docked {
+    animation: none;
+  }
+}
+.close {
+  top: -11px;
+  right: -11px;
+}
+.corner .close {
+  right: -6px;
+}
+.close:hover {
+  color: var(--white);
+  border-color: rgb(159 180 255 / 0.5);
+}
+.close svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: square;
+}
+.start .play {
+  width: 76px;
+  height: 76px;
+  color: var(--peri);
+  filter: drop-shadow(0 6px 24px rgb(0 0 0 / 0.5));
+  transition:
+    color 150ms ease,
+    scale 150ms ease;
+}
+.docked .start .play {
+  width: 48px;
+  height: 48px;
+}
+.start:hover .play,
+.start:focus-visible .play {
+  color: var(--mint);
+  scale: 1.06;
+}
+
+/* An episode page: quiet times, thin rules. */
+.time {
+  color: var(--faint);
+}
+a.time:hover {
+  color: var(--mint);
+  text-decoration: none;
+}
+.chapters {
+  border-left-width: 1px;
+}
+.chapters a:hover {
+  box-shadow: -2px 0 0 var(--peri);
+}
+.pager a:hover {
+  border-color: rgb(159 180 255 / 0.5);
+}
+
+/* Square corners everywhere, form controls too, whatever the browser draws by default. */
+button,
+input,
+textarea,
+select {
+  border-radius: 0;
+}
+</style><script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoObject","name":"PPO: reinforcement learning for a GPT | Minimum Viable GPT #8","description":"This time, our model learns from its own stories as it writes them, with reinforcement learning and proximal policy optimisation, PPO, as in the PPO paper and InstructGPT. A reward scored by code counts the requested words, a critic learns what score to expect, and a KL penalty keeps the model near the fine-tuned one. We train for ten minutes with a small penalty and with a large one, and measure both against the fine-tuned model and DPO.","thumbnailUrl":["https://i.ytimg.com/vi/8ewa70rUPME/maxresdefault.jpg"],"uploadDate":"2026-10-18","duration":"PT0H22M22S","embedUrl":"https://www.youtube.com/embed/8ewa70rUPME","url":"https://www.youtube.com/watch?v=8ewa70rUPME","hasPart":[{"@type":"Clip","name":"Intro","startOffset":0,"endOffset":101,"url":"https://www.youtube.com/watch?v=8ewa70rUPME"},{"@type":"Clip","name":"Reinforcement learning","startOffset":101,"endOffset":151,"url":"https://www.youtube.com/watch?v=8ewa70rUPME&t=101s"},{"@type":"Clip","name":"Where PPO comes from","startOffset":151,"endOffset":304,"url":"https://www.youtube.com/watch?v=8ewa70rUPME&t=151s"},{"@type":"Clip","name":"PPO's clipped objective","startOffset":304,"endOffset":353,"url":"https://www.youtube.com/watch?v=8ewa70rUPME&t=304s"},{"@type":"Clip","name":"The KL penalty","startOffset":353,"endOffset":406,"url":"https://www.youtube.com/watch?v=8ewa70rUPME&t=353s"},{"@type":"Clip","name":"PPO in code","startOffset":406,"endOffset":990,"url":"https://www.youtube.com/watch?v=8ewa70rUPME&t=406s"},{"@type":"Clip","name":"Ten minutes of PPO","startOffset":990,"endOffset":1103,"url":"https://www.youtube.com/watch?v=8ewa70rUPME&t=990s"},{"@type":"Clip","name":"What it bought, and what it cost","startOffset":1103,"endOffset":1191,"url":"https://www.youtube.com/watch?v=8ewa70rUPME&t=1103s"},{"@type":"Clip","name":"PPO next to DPO","startOffset":1191,"endOffset":1226,"url":"https://www.youtube.com/watch?v=8ewa70rUPME&t=1191s"},{"@type":"Clip","name":"What's real, and what's scaled down","startOffset":1226,"endOffset":1279,"url":"https://www.youtube.com/watch?v=8ewa70rUPME&t=1226s"},{"@type":"Clip","name":"Wrap-up","startOffset":1279,"endOffset":1342,"url":"https://www.youtube.com/watch?v=8ewa70rUPME&t=1279s"}]}</script><meta property="video:release_date" content="2026-10-18"><meta property="video:duration" content="1343"><meta property="video:tag" content="gpt"><meta property="video:tag" content="ppo"><meta property="video:tag" content="proximal policy optimization"><meta property="video:tag" content="reinforcement learning"><meta property="video:tag" content="rlhf"><meta property="video:tag" content="instructgpt"><meta property="video:tag" content="kl divergence"><meta property="video:tag" content="advantage"><meta property="video:tag" content="policy gradient"><meta property="video:tag" content="pytorch"><meta property="video:tag" content="language model"><meta property="video:tag" content="llm"><meta property="video:tag" content="tinystories"><meta property="video:tag" content="from scratch"><meta property="video:tag" content="mvgpt"><link rel="stylesheet" href="/_astro/_id_.zno4cNTK.css"><style>.token-field[data-astro-cid-r5v4z3ma]{z-index:-1;pointer-events:none;width:100%;height:100%;position:absolute;inset:0}
+</style><link rel="stylesheet" href="/_astro/Base.dQHtagFK.css"></head><body data-palette="{&quot;field&quot;:[&quot;#101215&quot;,&quot;#14171b&quot;,&quot;#191d22&quot;,&quot;#1f242b&quot;,&quot;#272d36&quot;,&quot;#343b47&quot;,&quot;#48526a&quot;,&quot;#6a77a0&quot;],&quot;ember&quot;:[&quot;#9fb4ff&quot;,&quot;#a8e6ed&quot;]}" data-astro-cid-hkbrpulz><header class="bar" data-astro-cid-hkbrpulz><div class="wrap bar-inner" data-astro-cid-hkbrpulz><a class="brand" href="/" data-astro-cid-hkbrpulz><span class="curly">{</span><span class="grad">mvGPT</span><span class="curly">}</span></a><nav aria-label="Site" data-astro-cid-hkbrpulz><a class="episodes" href="/#episodes" data-astro-cid-hkbrpulz>Episodes</a><a href="/about/" data-astro-cid-hkbrpulz>About</a><a href="https://www.youtube.com/playlist?list=PLR-9Y4UPbi8n5DURn9WMeMu3V_EJ7GD-A" data-astro-cid-hkbrpulz>YouTube</a><a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>Code</a><a href="https://nenuadrian.github.io/mvGPT/" data-astro-cid-hkbrpulz>Docs</a><a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-hkbrpulz><span class="long" data-astro-cid-hkbrpulz>Hugging Face</span><abbr class="short" title="Hugging Face" data-astro-cid-hkbrpulz>HF</abbr></a></nav></div></header><header class="hero glow" data-astro-cid-4ikiqo7u><canvas class="token-field" aria-hidden="true" data-words="[&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;girl&quot;,&quot;named&quot;,&quot;Sam&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;was&quot;,&quot;scared&quot;,&quot;because&quot;,&quot;he&quot;,&quot;needed&quot;,&quot;to&quot;,&quot;go&quot;,&quot;.&quot;,&quot;He&quot;,&quot;thought&quot;,&quot;for&quot;,&quot;help&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;had&quot;,&quot;a&quot;,&quot;little&quot;,&quot;bit&quot;,&quot;a&quot;,&quot;long&quot;,&quot;bed&quot;,&quot;and&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;do&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;showed&quot;,&quot;it&quot;,&quot;.&quot;,&quot;Sam&quot;,&quot;said&quot;,&quot;,&quot;,&quot;\&quot;&quot;,&quot;Why&quot;,&quot;are&quot;,&quot;you&quot;,&quot;sad&quot;,&quot;?\&quot;&quot;,&quot;Tim&quot;,&quot;was&quot;,&quot;sad&quot;,&quot;and&quot;,&quot;strong&quot;,&quot;.&quot;,&quot;He&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;help&quot;,&quot;.&quot;,&quot;But&quot;,&quot;he&quot;,&quot;did&quot;,&quot;not&quot;,&quot;know&quot;,&quot;what&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;boy&quot;,&quot;named&quot;,&quot;Tim&quot;,&quot;.&quot;,&quot;He&quot;,&quot;loved&quot;,&quot;to&quot;,&quot;play&quot;,&quot;with&quot;,&quot;his&quot;,&quot;friends&quot;,&quot;.&quot;,&quot;One&quot;,&quot;day&quot;,&quot;,&quot;,&quot;Tim&quot;,&quot;saw&quot;,&quot;a&quot;,&quot;big&quot;,&quot;bird&quot;,&quot;in&quot;,&quot;his&quot;,&quot;park&quot;,&quot;.&quot;,&quot;He&quot;,&quot;was&quot;,&quot;a&quot;,&quot;big&quot;,&quot;,&quot;,&quot;white&quot;,&quot;dog&quot;,&quot;came&quot;,&quot;to&quot;,&quot;see&quot;,&quot;a&quot;,&quot;tree&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;and&quot;,&quot;Sam&quot;,&quot;went&quot;,&quot;to&quot;,&quot;play&quot;,&quot;with&quot;,&quot;the&quot;,&quot;tree&quot;,&quot;.&quot;,&quot;They&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;play&quot;,&quot;too&quot;,&quot;.&quot;,&quot;They&quot;,&quot;went&quot;,&quot;to&quot;,&quot;play&quot;,&quot;together&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;girl&quot;,&quot;named&quot;,&quot;Lucy&quot;,&quot;.&quot;,&quot;She&quot;,&quot;was&quot;,&quot;so&quot;,&quot;happy&quot;,&quot;.&quot;,&quot;She&quot;,&quot;had&quot;,&quot;lots&quot;,&quot;of&quot;,&quot;fun&quot;,&quot;.&quot;,&quot;And&quot;,&quot;then&quot;,&quot;,&quot;,&quot;she&quot;,&quot;saw&quot;,&quot;a&quot;,&quot;big&quot;,&quot;red&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;Lucy&quot;,&quot;was&quot;,&quot;lost&quot;,&quot;.&quot;,&quot;She&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;play&quot;,&quot;with&quot;,&quot;the&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;They&quot;,&quot;started&quot;,&quot;to&quot;,&quot;make&quot;,&quot;a&quot;,&quot;new&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;Lucy&quot;,&quot;was&quot;,&quot;happy&quot;,&quot;.&quot;,&quot;She&quot;,&quot;had&quot;,&quot;a&quot;,&quot;ball&quot;,&quot;,&quot;,&quot;and&quot;,&quot;it&quot;,&quot;was&quot;,&quot;very&quot;,&quot;happy&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;little&quot;,&quot;mouse&quot;,&quot;who&quot;,&quot;was&quot;,&quot;very&quot;,&quot;lonely&quot;,&quot;.&quot;,&quot;He&quot;,&quot;loved&quot;,&quot;to&quot;,&quot;play&quot;,&quot;together&quot;,&quot;,&quot;,&quot;and&quot;,&quot;the&quot;,&quot;mouse&quot;,&quot;would&quot;,&quot;fly&quot;,&quot;around&quot;,&quot;and&quot;,&quot;make&quot;,&quot;things&quot;,&quot;.&quot;,&quot;One&quot;,&quot;day&quot;,&quot;,&quot;,&quot;a&quot;,&quot;little&quot;,&quot;girl&quot;,&quot;named&quot;,&quot;Lucy&quot;,&quot;saw&quot;,&quot;a&quot;,&quot;big&quot;,&quot;rock&quot;,&quot;in&quot;,&quot;the&quot;,&quot;ground&quot;,&quot;.&quot;,&quot;She&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;wear&quot;,&quot;a&quot;,&quot;bird&quot;,&quot;.&quot;,&quot;there&quot;,&quot;lived&quot;,&quot;a&quot;,&quot;little&quot;,&quot;boy&quot;,&quot;named&quot;,&quot;Tim&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;had&quot;,&quot;a&quot;,&quot;toy&quot;,&quot;that&quot;,&quot;was&quot;,&quot;a&quot;,&quot;big&quot;,&quot;box&quot;,&quot;.&quot;,&quot;He&quot;,&quot;had&quot;,&quot;a&quot;,&quot;toy&quot;,&quot;box&quot;,&quot;.&quot;,&quot;He&quot;,&quot;had&quot;,&quot;a&quot;,&quot;toy&quot;,&quot;car&quot;,&quot;.&quot;,&quot;He&quot;,&quot;would&quot;,&quot;pretend&quot;,&quot;the&quot;,&quot;store&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;went&quot;,&quot;to&quot;,&quot;the&quot;,&quot;toy&quot;,&quot;.&quot;,&quot;He&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;touch&quot;,&quot;it&quot;,&quot;with&quot;,&quot;it&quot;,&quot;.&quot;,&quot;He&quot;,&quot;wanted&quot;,&quot;to&quot;,&quot;his&quot;,&quot;mom&quot;,&quot;.&quot;,&quot;Tim&quot;,&quot;walked&quot;,&quot;to&quot;,&quot;the&quot;,&quot;toy&quot;,&quot;.&quot;,&quot;He&quot;,&quot;went&quot;,&quot;to&quot;,&quot;play&quot;,&quot;.&quot;,&quot;there&quot;,&quot;was&quot;,&quot;a&quot;,&quot;big&quot;,&quot;,&quot;,&quot;blue&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;The&quot;,&quot;car&quot;,&quot;was&quot;,&quot;very&quot;,&quot;sad&quot;,&quot;.&quot;,&quot;The&quot;,&quot;car&quot;,&quot;loved&quot;,&quot;to&quot;,&quot;look&quot;,&quot;at&quot;,&quot;the&quot;,&quot;ball&quot;,&quot;.&quot;,&quot;One&quot;,&quot;day&quot;,&quot;,&quot;,&quot;the&quot;,&quot;ball&quot;,&quot;started&quot;,&quot;to&quot;,&quot;play&quot;,&quot;.&quot;,&quot;He&quot;,&quot;went&quot;,&quot;for&quot;,&quot;his&quot;,&quot;car&quot;,&quot;.&quot;,&quot;He&quot;,&quot;felt&quot;,&quot;sad&quot;,&quot;.&quot;,&quot;The&quot;,&quot;car&quot;,&quot;felt&quot;,&quot;sad&quot;,&quot;or&quot;,&quot;lost&quot;,&quot;.&quot;]" data-astro-cid-r5v4z3ma></canvas><script type="module">var e=`400 14px "JetBrains Mono", Menlo, monospace`,t=.07,n=[[159,180,255],[168,230,237],[238,242,248]];for(let r of document.querySelectorAll(`.token-field`)){let i=JSON.parse(r.dataset.words??`[]`),a=r.getContext(`2d`),o=r.parentElement;if(!a||!o||!i.length)continue;let s=matchMedia(`(prefers-reduced-motion: reduce)`).matches,c=0,l=0,u=[],d=[],f=!0,p=0,m=0,h=0,g=null,_=()=>{let t=Math.min(devicePixelRatio||1,2);c=o.clientWidth,l=o.clientHeight,r.width=Math.round(c*t),r.height=Math.round(l*t),a.setTransform(t,0,0,t,0,0),a.font=e;let n=a.measureText(` `).width;u=[];for(let e=0;e*30<l+30;e++){let t=[],r=0,o=Math.floor(Math.random()*i.length);for(;r<c+200;){let e=i[o++%i.length],s=a.measureText(e).width;t.push({t:e,x:r,w:s}),r+=s+n*1.6}let s=(6+Math.random()*14)*(e%2?-1:1);u.push({toks:t,span:r,speed:s,off:Math.random()*r})}d=[];let s=o.querySelector(`[data-calm]`)?.getBoundingClientRect(),f=o.getBoundingClientRect();g=s?new DOMRect(s.x-f.x,s.y-f.y,s.width,s.height):null},v=()=>{a.clearRect(0,0,c,l),a.font=e,a.textBaseline=`middle`;let n=new Map;for(let e of d)n.set(`${e.row}:${e.tok}`,e);u.forEach((e,r)=>{let i=r*30+15,o=((e.off+m*e.speed)%e.span+e.span)%e.span;for(let s=-1;s<=0;s++)e.toks.forEach((l,u)=>{let d=l.x+o+s*e.span;if(d+l.w<0||d>c)return;let f=n.get(`${r}:${u}`);if(f){let e=(m-f.born)/1.8,n=t+.78*Math.max(0,1-e)**2;a.fillStyle=`rgb(${f.c.join(` `)} / ${n})`}else a.fillStyle=`rgb(171 173 176 / ${t})`;a.fillText(l.t,d,i)})}),a.globalCompositeOperation=`destination-in`;let r=a.createLinearGradient(0,0,0,l);if(r.addColorStop(0,`rgb(0 0 0 / 0)`),r.addColorStop(.18,`rgb(0 0 0 / 1)`),r.addColorStop(.82,`rgb(0 0 0 / 1)`),r.addColorStop(1,`rgb(0 0 0 / 0)`),a.fillStyle=r,a.fillRect(0,0,c,l),g){let e=g.x+g.width/2,t=g.y+g.height/2,n=Math.max(g.width,g.height)*.75;a.globalCompositeOperation=`destination-out`,a.save(),a.translate(e,t),a.scale(g.width/Math.max(g.width,g.height),g.height/Math.max(g.width,g.height));let r=a.createRadialGradient(0,0,0,0,0,n);r.addColorStop(0,`rgb(0 0 0 / 0.85)`),r.addColorStop(.65,`rgb(0 0 0 / 0.7)`),r.addColorStop(1,`rgb(0 0 0 / 0)`),a.fillStyle=r,a.fillRect(-n,-n,2*n,2*n),a.restore()}a.globalCompositeOperation=`source-over`},y=()=>{let e=Math.floor(Math.random()*u.length),t=u[e],r=((t.off+m*t.speed)%t.span+t.span)%t.span,i=e*30+15,a=e=>!!g&&e>g.x-40&&e<g.right+40&&i>g.y-20&&i<g.bottom+20,o=t.toks.map((e,t)=>[e.x+r,t]).filter(([e])=>e>0&&e<c-60&&!a(e)),s=o.length?o:t.toks.map((e,n)=>[e.x+r-t.span,n]).filter(([e])=>e>0&&e<c-60&&!a(e));if(!s.length)return;let[,l]=s[Math.floor(Math.random()*s.length)];d.push({row:e,tok:l,born:m,c:n[Math.floor(Math.random()*n.length)]})},b=e=>{if(!f||document.hidden)p=0;else{for(p&&(m+=Math.min(e-p,100)/1e3),p=e;m>=h;)y(),h=m+.12+Math.random()*.25;d=d.filter(e=>m-e.born<1.8),v(),requestAnimationFrame(b)}},x=()=>{s||!f||document.hidden||p||requestAnimationFrame(b)};document.fonts.ready.then(()=>{if(_(),s){for(let e=0;e<14;e++)y();v();return}new IntersectionObserver(([e])=>{f=e.isIntersecting,x()}).observe(o),document.addEventListener(`visibilitychange`,x);let e=0;new ResizeObserver(()=>{clearTimeout(e),e=window.setTimeout(()=>{(o.clientWidth!==c||o.clientHeight!==l)&&_()},150)}).observe(o)})}</script><div class="wrap" data-astro-cid-4ikiqo7u><div class="intro" data-calm data-astro-cid-4ikiqo7u><ul class="tags" data-astro-cid-4ikiqo7u><li data-astro-cid-4ikiqo7u>Episode 08</li><li data-astro-cid-4ikiqo7u>22 min</li></ul><h1 class="display grad" data-astro-cid-4ikiqo7u>PPO: reinforcement learning for a GPT</h1><p class="sub" data-astro-cid-4ikiqo7u>Our model learns from its own stories, scored as it writes them, with proximal policy optimisation, a critic and a penalty for drifting, and we measure it next to DPO.</p><p class="watch" data-astro-cid-4ikiqo7u><a href="https://www.youtube.com/watch?v=8ewa70rUPME" data-astro-cid-4ikiqo7u>Watch on YouTube</a></p></div></div></header><div class="wrap layout" data-astro-cid-kpaidhwy><main data-astro-cid-kpaidhwy><div class="player" data-player="8ewa70rUPME" data-title="PPO: reinforcement learning for a GPT | Minimum Viable GPT #8" data-astro-cid-g2mknjow><div class="screen" data-astro-cid-g2mknjow><div class="frame" data-astro-cid-g2mknjow><button type="button" class="start" aria-label="Play PPO: reinforcement learning for a GPT | Minimum Viable GPT #8" data-astro-cid-g2mknjow><img src="https://i.ytimg.com/vi/8ewa70rUPME/maxresdefault.jpg" alt="" width="1280" height="720" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/8ewa70rUPME/hqdefault.jpg'" data-astro-cid-g2mknjow><svg class="play" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="currentColor"></rect><path d="M26 20v24l19-12z" fill="var(--on-accent)"></path></svg></button></div><button type="button" class="close" aria-label="Close the mini player" data-astro-cid-g2mknjow><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button></div></div><script type="module">var e=`https://www.youtube-nocookie.com`,t=document.querySelector(`[data-player]`),n=t?.querySelector(`.screen`),r=t?.querySelector(`.frame`);if(t&&n&&r){let i=document.querySelector(`[data-mini-slot]`),a=(t,n,r=[])=>t.contentWindow?.postMessage(JSON.stringify({event:`command`,func:n,args:r}),e),o=!0,s=!1,c=!1,l=``,u=()=>{if(!s)return;let e=i?.getClientRects().length?i.getBoundingClientRect():null,t=e?`${e.left},${e.top},${e.width},${e.height}`:`corner`;t!==l&&(l=t,n.classList.toggle(`corner`,!e),e?Object.assign(n.style,{left:`${e.left}px`,top:`${e.top}px`,width:`${e.width}px`,height:`${e.height}px`}):n.removeAttribute(`style`)),requestAnimationFrame(u)},d=e=>{s=e,l=``,document.documentElement.classList.toggle(`mini-docked`,e),t.classList.toggle(`away`,e),n.classList.toggle(`docked`,e),e?requestAnimationFrame(u):(n.classList.remove(`corner`),n.removeAttribute(`style`))},f=()=>{let e=!o&&!c;e!==s&&d(e)},p=n=>{let i=r.querySelector(`iframe`);if(i){a(i,`seekTo`,[n,!0]),a(i,`playVideo`);return}let o=document.createElement(`iframe`),s=new URLSearchParams({autoplay:`1`,enablejsapi:`1`,rel:`0`,start:String(Math.floor(n))});o.src=`${e}/embed/${t.dataset.player}?${s}`,o.title=t.dataset.title??``,o.allow=`autoplay; encrypted-media; picture-in-picture; fullscreen`,o.allowFullscreen=!0,r.replaceChildren(o)};new IntersectionObserver(([e])=>{o=e.intersectionRatio>=.5,o&&(c=!1),f()},{threshold:[0,.5,1]}).observe(t),t.querySelector(`.start`)?.addEventListener(`click`,()=>p(0)),n.querySelector(`.close`)?.addEventListener(`click`,()=>{let e=r.querySelector(`iframe`);e&&a(e,`pauseVideo`),c=!0,f()}),document.addEventListener(`click`,e=>{let t=e.target.closest(`a[data-seek]`);!t||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||(e.preventDefault(),c=!1,p(Number(t.dataset.seek)),f())})}</script><p class="colab" data-astro-cid-5xslxzzu><a href="https://colab.research.google.com/github/nenuadrian/mvGPT/blob/main/notebooks/ep008-ppo.ipynb" title="Run this episode's code in a Colab notebook" data-astro-cid-5xslxzzu><img src="/colab-badge.svg" alt="Open in Colab" width="140" height="24" data-astro-cid-5xslxzzu></a></p><p class="description" data-astro-cid-kpaidhwy>This time, our model learns from its own stories as it writes them, with reinforcement learning and proximal policy optimisation, PPO, as in the PPO paper and InstructGPT. A reward scored by code counts the requested words, a critic learns what score to expect, and a KL penalty keeps the model near the fine-tuned one. We train for ten minutes with a small penalty and with a large one, and measure both against the fine-tuned model and DPO.</p><p class="topics muted" data-astro-cid-kpaidhwy>Topics: <a href="/?topic=reinforcement-learning#episodes" data-astro-cid-kpaidhwy>Reinforcement learning</a></p><section aria-labelledby="code" data-astro-cid-kpaidhwy><h2 class="section-title" id="code" data-astro-cid-kpaidhwy>The code</h2><p class="muted" data-astro-cid-kpaidhwy>Each step on screen is a tag in <a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-kpaidhwy>the code&#39;s repository</a>. The code at the end of the episode is <a href="https://github.com/nenuadrian/mvGPT/tree/ep008/end" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep008/end</code></a>.</p><ol class="steps" data-astro-cid-kpaidhwy><li data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=406s" data-seek="406" data-astro-cid-kpaidhwy>6:46</a><span class="step" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep008/step-1</code><span class="muted" data-astro-cid-kpaidhwy>PPO in code</span></span><span class="links" data-astro-cid-kpaidhwy><a href="https://github.com/nenuadrian/mvGPT/tree/ep008/step-1" data-astro-cid-kpaidhwy>Browse</a><a href="https://github.com/nenuadrian/mvGPT/compare/ep007/end...ep008/step-1" data-astro-cid-kpaidhwy>Changes</a></span></li><li data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1264s" data-seek="1264" data-astro-cid-kpaidhwy>21:04</a><span class="step" data-astro-cid-kpaidhwy><code data-astro-cid-kpaidhwy>ep008/step-2</code><span class="muted" data-astro-cid-kpaidhwy>What&#39;s real, and what&#39;s scaled down</span></span><span class="links" data-astro-cid-kpaidhwy><a href="https://github.com/nenuadrian/mvGPT/tree/ep008/step-2" data-astro-cid-kpaidhwy>Browse</a><a href="https://github.com/nenuadrian/mvGPT/compare/ep008/step-1...ep008/step-2" data-astro-cid-kpaidhwy>Changes</a></span></li></ol></section><section aria-labelledby="transcript" data-astro-cid-kpaidhwy><details class="transcript" open data-astro-cid-kpaidhwy><summary data-astro-cid-kpaidhwy><h2 class="section-title" id="transcript" data-astro-cid-kpaidhwy>Transcript</h2></summary><h3 data-astro-cid-kpaidhwy>Intro</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME" data-seek="0" data-astro-cid-kpaidhwy>0:00</a> Hello and welcome back to episode eight, where we&#39;re going to train our model with reinforcement learning: it writes stories, a reward scores them, and proximal policy optimisation makes the stories that score well more likely. Let&#39;s begin with a quick look at where we&#39;re going to be by the end of the episode.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=17s" data-seek="17" data-astro-cid-kpaidhwy>0:17</a> After ten minutes of PPO, asked for kite, river and brave, our model uses all three, with brave again and again. Its stories use about forty-five percent of the words an instruction asks for, up from about twenty-seven, and we&#39;re going to see what it cost, next to DPO&#39;s.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=36s" data-seek="36" data-astro-cid-kpaidhwy>0:36</a> On the website of the series, you can find more information about the project. The code is open source on GitHub, tagged at each step of each episode, so that you can follow along, and the docs get a page on reinforcement learning with PPO today. And each episode has a page here as well, with its chapters and its code.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=55s" data-seek="55" data-astro-cid-kpaidhwy>0:55</a> Now, before we get to today&#39;s work, let&#39;s quickly go over what we did last time. Our fine-tuned model wrote four stories per instruction, and the one that used the most of the words asked for was preferred to the one that used the fewest. DPO learned from two thousand of those pairs, against a frozen copy of the model, with no reward model and no reinforcement learning. The share of the requested words its stories use went from about twenty-seven to sixty-three percent, while the loss on plain stories rose from about two point three eight to two point eight seven, and fewer stories ended on their own. A longer story has more chances to use a word, so DPO learned to write longer stories, which repeat the words again and again. That&#39;s reward hacking: raising the score in ways that don&#39;t make the stories better.</p><h3 data-astro-cid-kpaidhwy>Reinforcement learning</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=101s" data-seek="101" data-astro-cid-kpaidhwy>1:41</a> DPO learned from pairs that the fine-tuned model wrote once, before training. Today, our model is going to learn from its own stories as it writes them, which is reinforcement learning. It writes a batch of stories, and a reward scores each one, with the share of the words asked for that it uses, as last time, so we can compare the two methods. A critic learns what score to expect, so each token is credited for doing better or worse than expected, and proximal policy optimisation, PPO, makes the stories that did better more likely, in small steps. A penalty for drifting keeps the model&#39;s probabilities close to the fine-tuned model&#39;s, and then the model writes again. We&#39;re going to train it for ten minutes, twice, with a small penalty and a larger one, and compare both with DPO. All right, let&#39;s get started with where PPO comes from.</p><h3 data-astro-cid-kpaidhwy>Where PPO comes from</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=152s" data-seek="152" data-astro-cid-kpaidhwy>2:32</a> PPO comes from Proximal Policy Optimization Algorithms, by John Schulman and others at OpenAI, from 2017. Its abstract describes policy gradient methods, which take turns between sampling data, such as our stories, and optimising an objective with gradient ascent. The standard methods make one gradient update per sample, and PPO&#39;s objective allows several passes of updates, in minibatches, over each batch of samples. It keeps some of the benefits of an earlier method, trust region policy optimisation, while being much simpler to implement, and the paper tests it on simulated robots and Atari games.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=189s" data-seek="189" data-astro-cid-kpaidhwy>3:09</a> PPO is what trained InstructGPT, in Training language models to follow instructions with human feedback, by Long Ouyang and others at OpenAI, from 2022, which is the recipe behind the first ChatGPT. Its figure two shows the three steps of their method. First, supervised fine-tuning, on answers written by people, which is what we did in episode three. Then a reward model, trained on people&#39;s rankings of the model&#39;s answers, as people can&#39;t score each answer while the model trains. And last, PPO, which optimises the model against that reward. Our reward is going to be code that counts the words asked for, in place of a reward model. Equation two is the objective: the reward, minus beta times the log of how much more likely the new model makes the answer than the fine-tuned one, which is a penalty for drifting from it. There&#39;s also a term with the pretraining data, which we leave out.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=244s" data-seek="244" data-astro-cid-kpaidhwy>4:04</a> In reinforcement learning, the model is called the policy, as it decides what to do, here which token to write next. The goal is to maximise the expected reward, the average score of the stories it would write for an instruction. The reward comes at the end of a story, from code that counts words, so we can&#39;t take its gradient the way we take the loss&#39;s. The policy gradient goes around that, by making each token of a story more likely in proportion to how well the story turned out. It follows the gradient of the token&#39;s log-probability, like fine-tuning does, weighted by A. A is the advantage: the reward the story got, minus V, the value, which is the reward a critic expected at that point in the story. A story that did better than expected has a positive advantage, and its tokens become more likely, and one that did worse, less likely. Subtracting what the critic expected leaves the gradient pointing where it did, on average, but makes it a lot less noisy, as a story that scores the way the critic expected teaches us very little.</p><h3 data-astro-cid-kpaidhwy>PPO&#39;s clipped objective</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=305s" data-seek="305" data-astro-cid-kpaidhwy>5:05</a> PPO makes several updates from each batch of stories, so the model it updates drifts from the one that wrote them. Rho is the ratio of a token&#39;s probability under the model now to its probability when the story was written, and it starts at one. The objective multiplies the advantage by that ratio, so raising a good token&#39;s probability raises the objective. Clip keeps the ratio between one minus epsilon and one plus epsilon, with epsilon at zero point two, and the min takes the smaller of the two. So once a good token is twenty percent more likely than it was, pushing it further doesn&#39;t raise the objective any more, and for a bad token, pushing its probability down stops raising the objective once it&#39;s twenty percent less likely. The name comes from there: each update stays proximal, or close, to the model that wrote the stories.</p><h3 data-astro-cid-kpaidhwy>The KL penalty</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=354s" data-seek="354" data-astro-cid-kpaidhwy>5:54</a> Last time, DPO&#39;s stories got longer and repeated the words, and beta was the single weight holding the policy near the reference. PPO keeps a frozen copy of the fine-tuned model too, as the reference, and r is the log of how much more likely the reference makes a token than the policy does. E to the r, minus r, minus one, estimates the K L divergence, which measures how far the policy&#39;s distribution has moved from the reference&#39;s. It&#39;s zero where the two agree, and above zero wherever they don&#39;t, as e to the r is at least one plus r. The loss has three parts: minus PPO&#39;s objective, the critic&#39;s squared error, weighted by a half, so that the critic learns to predict the rewards, and beta times the KL. With a small beta, raising the reward outweighs the penalty, and with a large one, the model stays close to where it started, so we&#39;re going to try two, zero point zero five and zero point five.</p><h3 data-astro-cid-kpaidhwy>PPO in code</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=407s" data-seek="407" data-astro-cid-kpaidhwy>6:47</a> All of PPO goes in a new file, ppo dot py. It imports copy, to copy the model for the reference, along with os, sys, textwrap and time, NumPy, torch, nn and functional, and TensorBoard&#39;s writer. From our own files, it takes the checkpoints and runs folders, with loading and saving checkpoints, and the data folder. From dpo dot py, it takes the demo instruction, and words rate, the share of the words used on fifty held-out instructions. From evaluate dot py, it takes load instructions, and words used, which is going to be our reward. Then pick device, and from preferences dot py, the group size, the most tokens a story gets, and load asks, which reads the instructions by their length in tokens. And write, from sample dot py, for a sample along the way. Rollout is sixteen: groups of instructions per rollout, sixteen times eight, a hundred and twenty-eight stories. A rollout is a round of writing and scoring, before the model learns from what it wrote. Epochs is two, the passes over each rollout, and a minibatch is sixteen stories. Clip is zero point two, how far the probability of a token may move in a single update. The learning rate is one times ten to the minus five, as for DPO, and we evaluate each ten rollouts. The critic is a class of its own, value head: from each position&#39;s channels, a guess at the reward the story is going to get. It&#39;s one linear layer, a projection, from the embedding size to a single number. A linear layer starts with small random weights, which would make random guesses at first. Nn init zeros sets its weights and its bias to zero, so it starts by expecting a reward of zero everywhere, and its first guesses don&#39;t add noise to the advantages. Forward runs the layer, and squeeze drops the last dimension, of size one, for a guess per position. Token log probs gives the log-probability the model gave each token of a sequence. Position t predicts token t plus one, so the logits drop their last position and the tokens their first. Log softmax turns the logits into log-probabilities, and gather picks the one of each token in the sequence, as in DPO, but kept per token, without the sum, as PPO weighs each token on its own. Rollout writes the stories, with no gradients, as writing them trains no weights. The lengths it draws from are those with at least a group of instructions. For each of the sixteen groups, it picks a length at random, and eight different instructions of that length, so their prompts stack into one tensor with no padding, as in preferences dot py. Generate writes up to two hundred tokens for each, at a temperature of one, and over it, we write why there&#39;s no top k: PPO compares probabilities with the full distribution the tokens were sampled from. With top k, the tokens would come from a cut-down distribution, and the ratios PPO computes would be off. For each story, we cut it at its first end of text, which it keeps, so stopping is part of what it learns. Its reward is the share of the requested words it uses, between zero and one. Pack puts the prompts and their stories in one padded batch, for the update. The longest sets the width, the sequences start as padding, and the mask, one position shorter, marks the story. For each row, we copy in the prompt and the story. On the shifted frame, the positions that predict the story&#39;s tokens get a one in the mask, so the update skips the prompt and the padding. Advantages is where each token gets its share of the credit. The advantages start as zeros, in the shape of the rewards. Generalized advantage estimation, from the last token back: how much better each token turned out than the critic expected. Where the mask ends, so does the story, with no value after it. Running, the credit so far, starts at zero for each story. The loop goes through the positions in reverse, from the last token back. More is one where the story goes on at the next position, from the mask, and next value is the critic&#39;s value there, and both are zero past the end. Delta is the reward at a token, plus the value of the next token, if the story goes on, minus this token&#39;s value. Running adds up the deltas from the end, so each token&#39;s advantage is what came after it, against what the critic expected. With lambda at one, that comes to the story&#39;s reward minus the value at that token. A lambda below one would fade the credit for tokens far from the end, and at zero point nine five, the start of a two hundred token story would get almost none. It returns the advantages, along with the returns, the advantages plus the values, which is what the critic learns to predict. Masked mean averages over the story&#39;s tokens and leaves out the rest. Main takes the minutes and kl, which weighs the penalty for drifting from the reference, and each value gets a folder of its own. We seed PyTorch and NumPy&#39;s random generator, and load the fine-tuned model as the policy. Deep copy makes the reference, frozen, as in DPO. The policy goes into evaluation mode, and the comment gives the reason: dropout off, so the probabilities at the update match the rollout&#39;s. The critic is a value head on the policy&#39;s device. The critic reads the channels after the final norm, while the model returns the logits alone, so a hook keeps them in a dictionary, hidden, without changing model dot py. Register forward hook is PyTorch&#39;s way to call a function each time a module runs, with its inputs and its output, so this lambda stores the norm&#39;s output in hidden, on each forward pass. AdamW trains the policy&#39;s weights and the critic&#39;s together, from one list of their parameters, with no weight decay, as in DPO. Parameters lists a module&#39;s weights, and adding the two lists hands both to a single optimiser. Load asks reads the training instructions, as long as their prompt leaves room for two hundred tokens of story, and load instructions takes the fifty held-out ones that evaluate dot py uses. The TensorBoard writer logs to a folder named after the KL weight and the time. Evaluate measures the share of the words used on the fifty instructions, and writes a story of a hundred and twenty tokens for the demo instruction, rain, cake and jump. Add scalar logs the share to TensorBoard, add text logs the story, and flush writes them to disk. We print the share, and the story under it, indented, and save a checkpoint named after the rollout, so we can measure the model at each point later. The budget is the minutes, in seconds, and start is the time now. The loop starts with an evaluation at rollout zero, and runs until the time&#39;s up. Each rollout writes a hundred and twenty-eight stories, packs them, and keeps their rewards in a tensor. With no gradients, we compute what the update compares against. Old is the log-probability of each token under the policy that wrote it, values are the critic&#39;s guesses from the channels the hook kept, and ref is the reference&#39;s log-probability. Rewards start at zero, with a place for each token of each story. The reward goes on each story&#39;s last token, and the advantages spread it back over the story. Last finds the last position of each story&#39;s mask, as the arg max of the mask times the positions, and the story&#39;s reward goes there. Advantages gives the advantages and the returns, and we normalise the advantages to a mean of zero and a spread of one, over the story tokens, so the size of an update doesn&#39;t depend on how the rewards happen to be scaled. Then two epochs, two passes over the rollout, in minibatches of sixteen stories, from rand perm, a random order of the rows, split into sixteens. For each minibatch, we run the policy again, with gradients this time, and new is its log-probabilities. The ratio is e to the new minus the old, which is the ratio of the probabilities. It&#39;s about one on the first minibatch, and drifts from one as the updates go on. Then PPO&#39;s clipped objective, where moving a token&#39;s probability past the clip doesn&#39;t raise the objective. Surrogate is the smaller of the ratio times the advantage, and the ratio clamped between zero point eight and one point two, times the advantage, as in the formula. The policy loss is minus its mean over the story tokens, as the optimiser minimises. The value loss is the critic&#39;s squared error against the returns. We detach the channels, so the critic learns from the policy&#39;s channels without changing them. An earlier version let the critic&#39;s gradients reach the policy&#39;s channels, and the policy collapsed. Then the KL from the reference, estimated per token as e to the r, minus r, minus one, where r is the log of the reference&#39;s probability minus the policy&#39;s. The estimate can&#39;t go below zero, and it&#39;s zero where the two agree. So the KL loss is its mean over the story tokens. InstructGPT puts this penalty in the reward, per token. At our scale, its noise was larger than the spread of the rewards, and the policy learned little, so here it goes in the loss. The loss is the policy loss, plus half the value loss, plus the KL weight times the KL. And the step is fine-tuning&#39;s: zero the gradients, backward, clip them at one, and the optimiser&#39;s step. After the update, step, which counts the rollouts, goes up by one. Drift is the KL of each story from the reference: the sum of its tokens&#39; log-ratios, from the rollout. We log the average reward and that KL to TensorBoard, print them with the minutes so far, and evaluate each ten rollouts. At the end, there&#39;s a last evaluation if the last rollout wasn&#39;t one, and the final model is saved in the run&#39;s folder, with a line for how many rollouts and minutes it took. Main runs with the minutes and the KL weight from the command line, ten and zero point zero five by default.</p><h3 data-astro-cid-kpaidhwy>Ten minutes of PPO</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=990s" data-seek="990" data-astro-cid-kpaidhwy>16:30</a> Let&#39;s train for ten minutes with a KL weight of zero point zero five. At rollout zero, the policy is the fine-tuned model, and its stories use about twenty-seven percent of the words on the held-out instructions. Each rollout then takes about thirteen seconds on my laptop, to write the stories and make two passes over them, and prints the average reward and the KL. The KL is zero at first, as the policy starts as a copy of the reference, and it grows from there. Each ten rollouts, the demo story for rain, cake and jump shows the change: by rollout ten, all three words are in it, and later on, cake comes back again and again, as the reward counts the words and repeating one isn&#39;t penalised. By the end, after forty-eight rollouts, about sixty-one hundred stories in all, the held-out stories use about forty-eight percent of the words.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1040s" data-seek="1040" data-astro-cid-kpaidhwy>17:20</a> Then ten minutes with ten times the weight, zero point five. The KL stays down, at a few per story, and the reward moves a lot less, so the held-out stories go from about twenty-seven percent of the words to about thirty-two, in forty-nine rollouts.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1074s" data-seek="1074" data-astro-cid-kpaidhwy>17:54</a> On a chart, the reward, the share of the words in each rollout&#39;s stories, climbs with the small weight, from about thirty-four percent over the first five rollouts to about forty-nine over the last five, while the large weight takes it to about thirty-four. Each rollout scores its own instructions and stories, so the reward moves up and down by a few percent from one to the next. With the small weight, the KL from the reference grows rollout after rollout, to about twenty-two per story, while the large weight holds it at about three point five.</p><h3 data-astro-cid-kpaidhwy>What it bought, and what it cost</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1103s" data-seek="1103" data-astro-cid-kpaidhwy>18:23</a> Now evaluate dot py, on the fine-tuned model, DPO&#39;s, and the two PPO models. The words used go from twenty-seven percent for the fine-tuned model to forty-five with the small KL weight, and twenty-eight with the large one, against sixty-three for DPO. The loss on plain stories goes from two point three eight to two point five two and two point four zero, against two point eight seven for DPO, and the stories that end within two hundred tokens are forty-eight and fifty-two percent, against twenty for DPO. And after once upon a time, there was a little, the model with the small weight puts about seventy-two percent on girl, up from forty-three, so more of its probability goes to a single word, which is a sign its stories vary less.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1147s" data-seek="1147" data-astro-cid-kpaidhwy>19:07</a> Side by side, DPO still uses the most of the words, and PPO with the small weight gets about fifty percent of DPO&#39;s gain over the fine-tuned model. On plain stories, though, PPO&#39;s loss rises by about zero point one four, against about zero point four nine for DPO, and its stories end on their own as often as the fine-tuned model&#39;s, where DPO&#39;s ran on.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1169s" data-seek="1169" data-astro-cid-kpaidhwy>19:29</a> We give both PPO models the instruction from last time, rain, cake and jump, with the seed we used for the fine-tuned model and DPO&#39;s. With the small weight, all three words are in the story, cake comes back in almost each sentence, and the story ends on its own. With the large weight, the story uses cake, again and again, with no rain or jump, and it ends after a few lines.</p><h3 data-astro-cid-kpaidhwy>PPO next to DPO</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1192s" data-seek="1192" data-astro-cid-kpaidhwy>19:52</a> DPO learned from pairs that the fine-tuned model wrote once, so as the policy changed, its training data stayed the fine-tuned model&#39;s. PPO learns from the stories the policy writes now, so its training data changes as the policy does. That costs time, as each update waits for a rollout of a hundred and twenty-eight stories to be written and scored. And there&#39;s more to tune: the KL weight, the clip, the learning rate and the critic. With ten times the KL weight, the words used went from about twenty-seven percent to twenty-eight, against forty-five with the small weight.</p><h3 data-astro-cid-kpaidhwy>What&#39;s real, and what&#39;s scaled down</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1226s" data-seek="1226" data-astro-cid-kpaidhwy>20:26</a> The algorithm is the one InstructGPT used, with a policy, a critic, the clipped objective and a KL penalty, and what we scaled down is the reward, the model&#39;s size and the compute. Their reward came from a reward model, trained on rankings from forty contractors they hired, where ours is code that counts words, which is easy to game, as DPO showed us. Their largest model had a hundred and seventy-five billion parameters, and ours has fourteen point six million, with a context of two hundred and fifty-six tokens. And training their largest model with PPO took about sixty petaflop-days of compute, where each of our runs took ten minutes on my laptop.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1264s" data-seek="1264" data-astro-cid-kpaidhwy>21:04</a> Last, the docs get a page on reinforcement learning with PPO, with the reward, the loop of rollouts, credit and updates, and the results next to DPO&#39;s. And the README has the command to train with PPO, with a KL weight of zero point zero five.</p><h3 data-astro-cid-kpaidhwy>Wrap-up</h3><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1280s" data-seek="1280" data-astro-cid-kpaidhwy>21:20</a> So, today our model learned from its own stories, with reinforcement learning. Each rollout wrote a hundred and twenty-eight stories, scored by the share of the words they use, and a critic learned what score to expect, so each token was credited for doing better or worse than expected. PPO&#39;s clipped objective kept each update close to the model that wrote the stories, and a KL penalty kept the model near the fine-tuned one. With a weight of zero point zero five, the words used went from about twenty-seven to forty-five percent, for a smaller rise in the loss on plain stories than DPO&#39;s, and its stories still end on their own. And with ten times the weight, the model stayed close to where it started, at about twenty-eight percent.</p><p data-astro-cid-kpaidhwy><a class="time" href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1323s" data-seek="1323" data-astro-cid-kpaidhwy>22:03</a> Let me know in the comments whether you&#39;d pick PPO or DPO for a model like ours, and which parts of reinforcement learning you&#39;d like us to go deeper on. And if you&#39;d like to follow along, subscribe to the channel. I hope you find this useful, and thanks for watching.</p></details></section></main><aside aria-labelledby="chapters" data-astro-cid-kpaidhwy><div class="mini-slot" data-mini-slot data-astro-cid-kpaidhwy></div><h2 class="section-title" id="chapters" data-astro-cid-kpaidhwy>Chapters</h2><ol class="chapters" data-astro-cid-kpaidhwy><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=8ewa70rUPME" data-seek="0" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>0:00</span><span data-astro-cid-kpaidhwy>Intro</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=101s" data-seek="101" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>1:41</span><span data-astro-cid-kpaidhwy>Reinforcement learning</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=151s" data-seek="151" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>2:31</span><span data-astro-cid-kpaidhwy>Where PPO comes from</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=304s" data-seek="304" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>5:04</span><span data-astro-cid-kpaidhwy>PPO&#39;s clipped objective</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=353s" data-seek="353" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>5:53</span><span data-astro-cid-kpaidhwy>The KL penalty</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=406s" data-seek="406" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>6:46</span><span data-astro-cid-kpaidhwy>PPO in code</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=990s" data-seek="990" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>16:30</span><span data-astro-cid-kpaidhwy>Ten minutes of PPO</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1103s" data-seek="1103" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>18:23</span><span data-astro-cid-kpaidhwy>What it bought, and what it cost</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1191s" data-seek="1191" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>19:51</span><span data-astro-cid-kpaidhwy>PPO next to DPO</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1226s" data-seek="1226" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>20:26</span><span data-astro-cid-kpaidhwy>What&#39;s real, and what&#39;s scaled down</span></a></li><li data-astro-cid-kpaidhwy><a href="https://www.youtube.com/watch?v=8ewa70rUPME&amp;t=1279s" data-seek="1279" class="astro-kpaidhwy" data-astro-cid-kpaidhwy><span class="time" data-astro-cid-kpaidhwy>21:19</span><span data-astro-cid-kpaidhwy>Wrap-up</span></a></li></ol></aside></div><nav class="wrap pager" aria-label="Episodes" data-astro-cid-kpaidhwy><a class="prev" href="/ep007-dpo/" data-astro-cid-kpaidhwy><span class="muted" data-astro-cid-kpaidhwy>← Episode 7</span><span data-astro-cid-kpaidhwy>DPO: teaching a GPT from preferences</span></a><a class="next" href="/ep009-lora/" data-astro-cid-kpaidhwy><span class="muted" data-astro-cid-kpaidhwy>Episode 9 →</span><span data-astro-cid-kpaidhwy>LoRA: fine-tuning a GPT with 2% of its weights</span></a></nav><script type="module">var e=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5].map(e=>(e+.5)/16),t=(e,t,n=0)=>{let r=Math.sin(e*127.1+t*311.7+n*74.7)*43758.5453;return r-Math.floor(r)},n=e=>e*e*(3-2*e);function r(e,r){let i=Math.floor(e),a=Math.floor(r),o=n(e-i),s=n(r-a),c=t(i,a),l=t(i+1,a),u=t(i,a+1),d=t(i+1,a+1);return c+(l-c)*o+(u-c)*s+(c-l-u+d)*o*s}function i(e,t){let n=0,i=.5;for(let a=0;a<4;a++)n+=i*r(e,t),e=e*2.03+17.1,t=t*2.03+9.2,i*=.5;return n/.9375}var a=(e,t,r)=>n(Math.max(0,Math.min(1,(e-t)/(r-t)))),o=(e,t)=>e===`left`?.1+.9*a(t,.35,.8):e===`center`?.08+.92*a(Math.abs(t-.5)*2,.5,.95):1,s=e=>3+e*7.3;function c({cols:t,rows:n,shades:r,seed:a=0,calm:c=`even`,t:l=s(a)}){let u=t/n,d=new Uint8Array(t*n);for(let s=0;s<n;s++)for(let f=0;f<t;f++){let p=f/t*u*1.15+a*13.7,m=s/n*1.15+a*5.3,h=i(p+l*.04,m-l*.02),g=i(p+4*h+l*.06,m+4*h-l*.05),_=Math.max(0,Math.min(1,(g-.3)/.32)),v=Math.exp(-(((_-.62)/.05)**2)),y=(_**1.9+.7*v)*o(c,f/(t-1))*(r-1)+e[s%4*4+f%4]-.5;d[s*t+f]=Math.max(0,Math.min(r-1,Math.round(y)))}return d}function l({cols:e,rows:n,ember:r,seed:i=0,calm:a=`even`,t:s}){let c=[];for(let l=0;l<Math.round(e*n/90);l++){let u=1.2+2.8*t(l,1,i),d=n+8,f=Math.floor(d-(s*u+t(l,2,i)*d)%d)-4,p=Math.floor(t(l,3,i)*e+Math.sin(s*1.3+l)*1.5);f<0||f>=n||p<0||p>=e||o(a,p/e)<.7||t(l,4,i)>o(a,p/e)||t(l,Math.floor(s*8),i)<.18||c.push({x:p,y:f,color:r[l%r.length]})}return c}var u=120,d=36,f=20;function p(e,{field:t,ember:n}){let r=t.map(e=>[1,3,5].map(t=>parseInt(e.slice(t,t+2),16))),i=Number(e.dataset.seed??0),a=e.dataset.calm??`even`,o=document.createElement(`canvas`);o.className=`field-anim`,o.width=u,o.height=d,o.setAttribute(`aria-hidden`,`true`);let p=o.getContext(`2d`);if(!p)return;let m=p.createImageData(u,d),h=s(i),g=0,_=0,v=!1,y=!0,b=e=>{let o=c({cols:u,rows:d,shades:t.length,seed:i,calm:a,t:e});for(let e=0;e<o.length;e++){let[t,n,i]=r[o[e]];m.data.set([t,n,i,255],e*4)}p.putImageData(m,0,0);for(let t of l({cols:u,rows:d,ember:n,seed:i,calm:a,t:e-h}))p.fillStyle=t.color,p.fillRect(t.x,t.y,1,1)},x=e=>{!y||document.hidden?v=!1:(_&&(g+=Math.min(e-_,100)/1e3),_=e,b(h+g),setTimeout(()=>requestAnimationFrame(x),1e3/f))},S=()=>{v||!y||document.hidden||(v=!0,_=0,requestAnimationFrame(x))};b(h),e.prepend(o),new IntersectionObserver(([e])=>{y=e.isIntersecting,S()}).observe(e),document.addEventListener(`visibilitychange`,S)}var m=document.body.dataset.palette;if(m&&!matchMedia(`(prefers-reduced-motion: reduce)`).matches){let e=JSON.parse(m);document.querySelectorAll(`.field[data-seed]`).forEach(t=>p(t,e))}var h=document.querySelector(`.bar`);if(h){let e=window.scrollY,t=!1,n=()=>{t=!1;let n=Math.max(0,window.scrollY);h.classList.toggle(`solid`,n>0),n<=h.offsetHeight?(h.classList.remove(`away`),e=n):Math.abs(n-e)>4&&(h.classList.toggle(`away`,n>e),e=n)};window.addEventListener(`scroll`,()=>{t||(t=!0,requestAnimationFrame(n))},{passive:!0}),n(),new ResizeObserver(()=>document.documentElement.style.setProperty(`--bar-h`,`${h.offsetHeight}px`)).observe(h)}</script><footer class="foot" data-astro-cid-hkbrpulz><div class="wrap foot-inner" data-astro-cid-hkbrpulz><span data-astro-cid-hkbrpulz>mvGPT – Building a Minimum Viable GPT, A Language Model from Scratch</span><nav aria-label="Elsewhere" data-astro-cid-hkbrpulz><a href="/about/" data-astro-cid-hkbrpulz>About</a><a href="https://www.youtube.com/playlist?list=PLR-9Y4UPbi8n5DURn9WMeMu3V_EJ7GD-A" data-astro-cid-hkbrpulz>YouTube</a><a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>The code on GitHub</a><a href="https://nenuadrian.github.io/mvGPT/" data-astro-cid-hkbrpulz>Docs</a><a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>The models on Hugging Face</a><a href="/rss.xml" data-astro-cid-hkbrpulz>RSS</a></nav></div></footer></body></html>
