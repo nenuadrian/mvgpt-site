@@ -2,7 +2,7 @@
   "name": "mvGPT",
   "title": "Minimum Viable GPT: A Language Model from Scratch",
   "description": "Understand language models from the ground up: the whole training pipeline, from pretraining to reinforcement learning, with evaluation, metrics and diagnostics.",
-  "cover": "https://mvgpt.nenuadrian.com/cover.webp",
+  "cover": "https://mvgpt.nenuadrian.com/cover.webp?v=90e0e34fb7",
   "url": "https://mvgpt.nenuadrian.com/",
   "episodes": 30,
   "hours": 13.9,
