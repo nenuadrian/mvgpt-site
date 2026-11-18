@@ -4,11 +4,11 @@
   "description": "Understand language models from the ground up: the whole training pipeline, from pretraining to reinforcement learning, with evaluation, metrics and diagnostics.",
   "cover": "https://mvgpt.nenuadrian.com/cover.webp?v=90e0e34fb7",
   "url": "https://mvgpt.nenuadrian.com/",
-  "episodes": 30,
-  "hours": 13.9,
+  "episodes": 34,
+  "hours": 15.9,
   "latest": {
-    "title": "GRPO in Hugging Face TRL on our own small GPT",
-    "url": "https://mvgpt.nenuadrian.com/ep030-trl/",
-    "thumb": "https://mvgpt.nenuadrian.com/thumbs/ep030-trl.webp"
+    "title": "Our GPT's own GPU kernels in Mojo on a Mac",
+    "url": "https://mvgpt.nenuadrian.com/ep035-mojo/",
+    "thumb": "https://mvgpt.nenuadrian.com/thumbs/ep035-mojo.webp"
   }
 }
