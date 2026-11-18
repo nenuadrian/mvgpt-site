@@ -1,0 +1,538 @@
+<!DOCTYPE html><html lang="en-GB" data-astro-cid-hkbrpulz><head><script async src="https://www.googletagmanager.com/gtag/js?id=G-F16ZZFP5E4"></script><script>window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', "G-F16ZZFP5E4");</script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Try mvGPT in your browser | mvGPT</title><meta name="description" content="Talk to mvGPT in your browser: the fine-tuned model writes a children's story from a summary, and the bigger pretrained one carries on the beginning of one. Nothing is installed, and nothing leaves the page."><link rel="canonical" href="https://mvgpt.nenuadrian.com/try/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="alternate" type="application/rss+xml" title="mvGPT" href="/rss.xml"><link rel="sitemap" href="/sitemap.xml"><meta name="theme-color" content="#101215"><meta property="og:site_name" content="mvGPT"><meta property="og:type" content="website"><meta property="og:title" content="Try mvGPT in your browser"><meta property="og:description" content="Talk to mvGPT in your browser: the fine-tuned model writes a children's story from a summary, and the bigger pretrained one carries on the beginning of one. Nothing is installed, and nothing leaves the page."><meta property="og:url" content="https://mvgpt.nenuadrian.com/try/"><meta property="og:locale" content="en_GB"><meta name="twitter:card" content="summary"><style>@font-face{font-family:"aphrodite-display";src:url("/fonts/display-SpaceGrotesk-Medium.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"aphrodite-display";src:url("/fonts/display-SpaceGrotesk-Bold.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+:root{--bg:#101215;--bg-rgb:16 18 21;--surface:#14171b;--surface-2:#191d22;--line:#1f242b;--shadow:#272d36;--text:#e8ecf2;--heading:#eef2f8;--prose:#d8dce2;--muted:#a6aab0;--faint:#81868d;--ember:#9fb4ff;--ember-2:#a8e6ed;--on-ember:#14171b;--code:#9FB4FF;--font-display:"aphrodite-display", var(--font-ui);--font-ui:"Inter", -apple-system, 'Helvetica Neue', sans-serif;--font-mono:"JetBrains Mono", Menlo, monospace;--font-hand:"Caveat", 'Comic Sans MS', cursive}</style><style>/* mvGPT's website on top of aphrodite's: a near-black slate, a soft glow, titles in a periwinkle ->
+   white -> mint ramp, Space Grotesk throughout. aphrodite's own rules are in a cascade layer, so
+   these win over them; its markup is the same for both series, and site/components/ holds what's
+   mvGPT's alone (the brand, the heroes, the token field, the model to try, the player's icons). */
+
+/* Space Grotesk (public/fonts/, from @fontsource/space-grotesk 5.3.0, OFL). */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(/fonts/space-grotesk-latin-ext-400-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(/fonts/space-grotesk-latin-400-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(/fonts/space-grotesk-latin-ext-500-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(/fonts/space-grotesk-latin-500-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(/fonts/space-grotesk-latin-ext-600-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(/fonts/space-grotesk-latin-600-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(/fonts/space-grotesk-latin-ext-700-normal.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(/fonts/space-grotesk-latin-700-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+:root {
+  --bg: #101215;
+  --bg-rgb: 16 18 21;
+  --surface: #15181c;
+  --surface-2: #1b1f24;
+  --line: #262a31;
+  --text: #e8ecf2;
+  --heading: var(--text);
+  --prose: #cfd3da;
+  --muted: #abadb0;
+  --faint: #7d8087;
+  --peri: #9fb4ff;
+  --white: #eef2f8;
+  --mint: #a8e6ed;
+  --brace: #8b9de8;
+  --ember: var(--peri);
+  --ember-2: var(--mint);
+  --on-ember: #101215;
+  --on-accent: #101215;
+  --code: var(--mint);
+  --grad: linear-gradient(100deg, var(--peri) 0%, var(--white) 50%, var(--mint) 100%);
+  --font-display: 'Space Grotesk', -apple-system, 'Helvetica Neue', sans-serif;
+  --font-ui: var(--font-display);
+  --font-mono: 'JetBrains Mono', Menlo, monospace;
+  /* The names our own parts use. */
+  --display: var(--font-display);
+  --ui: var(--font-ui);
+  --mono: var(--font-mono);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1.1;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: inherit;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  text-shadow: none;
+}
+
+/* Gradient title text, as on the thumbnails. */
+.grad {
+  width: fit-content;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Kicker tags: small mono labels in thin outlines, the first in periwinkle. */
+.tags {
+  gap: 8px;
+}
+.tags > *,
+.tags > :last-child {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: rgb(16 18 21 / 0.6);
+}
+.tags > :first-child {
+  border-color: rgb(159 180 255 / 0.45);
+  color: var(--peri);
+}
+
+/* A hero with the soft glow behind its title. */
+.glow {
+  position: relative;
+  isolation: isolate;
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+.glow::before {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  inset: -30% -10% -30% 25%;
+  background:
+    radial-gradient(closest-side at 55% 50%, rgb(159 180 255 / 0.1), transparent),
+    radial-gradient(closest-side at 75% 55%, rgb(168 230 237 / 0.06), transparent);
+  pointer-events: none;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+}
+
+/* The bar: in the page's flow, frosted, sliding away while scrolling down. */
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgb(16 18 21 / 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+  transition: transform 200ms ease;
+}
+.bar-inner {
+  padding-block: 14px;
+}
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+  text-shadow: none;
+}
+.curly {
+  color: var(--brace);
+  font-weight: 400;
+}
+.curly:first-child {
+  margin-right: 0.08em;
+}
+.curly:last-child {
+  margin-left: 0.08em;
+}
+/* The links in a line on wider screens; on a phone they're aphrodite's menu, a link a row. */
+@media (min-width: 721px) {
+  .bar nav {
+    flex-wrap: nowrap;
+    gap: clamp(14px, 3vw, 28px);
+  }
+}
+.bar nav a {
+  color: var(--muted);
+}
+.bar nav a:hover,
+.menu:hover {
+  color: var(--white);
+}
+
+/* Episode cards: lifting with a glow. */
+.card {
+  overflow: hidden;
+  box-shadow: none;
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+.card:hover {
+  border-color: rgb(159 180 255 / 0.5);
+  box-shadow: 0 10px 40px -12px rgb(159 180 255 / 0.25);
+  transform: translateY(-2px);
+}
+.card .placeholder {
+  background: radial-gradient(closest-side, rgb(159 180 255 / 0.1), transparent) var(--bg);
+}
+.card .placeholder span,
+.player.draft .display {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.card .placeholder span {
+  font-size: clamp(1.5rem, 3.4vw, 2rem);
+}
+.card .tags > * {
+  font-size: 0.78rem;
+  border-width: 1px;
+}
+.card h3 {
+  font-weight: 600;
+}
+
+/* The player: square, with a square play button, and a mini player that pops in. */
+.player {
+  overflow: hidden;
+  box-shadow: 0 20px 60px -24px rgb(159 180 255 / 0.25);
+}
+.player.draft {
+  background: radial-gradient(closest-side, rgb(159 180 255 / 0.1), transparent) var(--bg);
+}
+.player.draft p {
+  background: none;
+}
+.screen.docked {
+  z-index: 4;
+  animation: pop 180ms ease-out;
+}
+.docked .frame {
+  box-shadow:
+    0 18px 48px -12px rgb(0 0 0 / 0.7),
+    0 0 0 1px rgb(159 180 255 / 0.12);
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen.docked {
+    animation: none;
+  }
+}
+.close {
+  top: -11px;
+  right: -11px;
+}
+.corner .close {
+  right: -6px;
+}
+.close:hover {
+  color: var(--white);
+  border-color: rgb(159 180 255 / 0.5);
+}
+.close svg,
+.menu svg:not(.open-icon),
+.search-close svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: square;
+}
+.start .play {
+  width: 76px;
+  height: 76px;
+  color: var(--peri);
+  filter: drop-shadow(0 6px 24px rgb(0 0 0 / 0.5));
+  transition:
+    color 150ms ease,
+    scale 150ms ease;
+}
+.docked .start .play {
+  width: 48px;
+  height: 48px;
+}
+.start:hover .play,
+.start:focus-visible .play {
+  color: var(--mint);
+  scale: 1.06;
+}
+
+/* An episode page: quiet times, thin rules. */
+.time {
+  color: var(--faint);
+}
+a.time:hover {
+  color: var(--mint);
+  text-decoration: none;
+}
+.chapters {
+  border-left-width: 1px;
+}
+.chapters a:hover {
+  box-shadow: -2px 0 0 var(--peri);
+}
+.pager a:hover {
+  border-color: rgb(159 180 255 / 0.5);
+}
+
+/* Square corners everywhere, form controls too, whatever the browser draws by default. */
+button,
+input,
+textarea,
+select {
+  border-radius: 0;
+}
+</style><style>.hero[data-astro-cid-rvm3voet]{padding-block:100px 48px}h1[data-astro-cid-rvm3voet]{margin:0;font-size:clamp(3rem,10vw,5.5rem)}
+</style><link rel="stylesheet" href="/_astro/Base.DV1BDJVb.css"><style>main[data-astro-cid-d5bup4pl]{max-width:880px;padding-block:40px 96px}.lead[data-astro-cid-d5bup4pl]{color:var(--prose);margin:0 0 28px;font-size:1.1rem;line-height:1.6}.chat[data-astro-cid-d5bup4pl] .log{max-height:min(62vh,640px)}.models[data-astro-cid-d5bup4pl]{color:var(--prose);margin-top:48px;line-height:1.6}h2[data-astro-cid-d5bup4pl]{font-family:var(--display);color:var(--text);margin:0 0 16px;font-size:1.4rem}dl[data-astro-cid-d5bup4pl]{margin:0}dt[data-astro-cid-d5bup4pl]{font-family:var(--mono);color:var(--mint);font-size:.9rem}dd[data-astro-cid-d5bup4pl]{margin:4px 0 18px}
+</style><link rel="stylesheet" href="/_astro/TryModel.Dz7M4JNr.css"></head><body data-palette="{&quot;field&quot;:[&quot;#101215&quot;,&quot;#14171b&quot;,&quot;#191d22&quot;,&quot;#1f242b&quot;,&quot;#272d36&quot;,&quot;#343b47&quot;,&quot;#48526a&quot;,&quot;#6a77a0&quot;],&quot;ember&quot;:[&quot;#9fb4ff&quot;,&quot;#a8e6ed&quot;]}" data-astro-cid-hkbrpulz><header class="bar" data-astro-cid-hkbrpulz><div class="wrap bar-inner" data-astro-cid-hkbrpulz><a class="brand" href="/" data-astro-cid-hkbrpulz><span class="curly">{</span><span class="grad">mvGPT</span><span class="curly">}</span></a><div class="search" data-search data-astro-cid-hkbrpulz><form class="search-form" id="site-search" role="search" action="/" data-astro-cid-hkbrpulz><svg class="glass" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges" data-astro-cid-hkbrpulz><path d="M2 0h3v1h-3zM1 1h1v1h-1zM5 1h1v1h-1zM0 2h1v3h-1zM6 2h1v3h-1zM1 5h1v1h-1zM5 5h1v1h-1zM2 6h3v1h-3zM6 6h1v1h-1zM7 7h1v1h-1z" data-astro-cid-hkbrpulz></path></svg><input type="search" name="q" placeholder="Search episodes" aria-label="Search episodes" autocomplete="off" spellcheck="false" enterkeyhint="go" role="combobox" aria-expanded="false" aria-controls="search-results" aria-autocomplete="list" data-astro-cid-hkbrpulz><button type="button" class="search-close" aria-label="Close the search" data-astro-cid-hkbrpulz><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button></form><ul class="results" id="search-results" role="listbox" aria-label="Episodes" hidden data-astro-cid-hkbrpulz></ul></div><button type="button" class="search-open" aria-label="Search" aria-expanded="false" aria-controls="site-search" data-astro-cid-hkbrpulz><svg class="glass" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges" data-astro-cid-hkbrpulz><path d="M2 0h3v1h-3zM1 1h1v1h-1zM5 1h1v1h-1zM0 2h1v3h-1zM6 2h1v3h-1zM1 5h1v1h-1zM5 5h1v1h-1zM2 6h3v1h-3zM6 6h1v1h-1zM7 7h1v1h-1z" data-astro-cid-hkbrpulz></path></svg></button><button type="button" class="menu" aria-expanded="false" aria-controls="site-nav" aria-label="Menu" data-astro-cid-hkbrpulz><svg class="open-icon" viewBox="0 0 8 7" aria-hidden="true" shape-rendering="crispEdges" data-astro-cid-hkbrpulz><path d="M0 0h8v1h-8zM0 3h8v1h-8zM0 6h8v1h-8z" data-astro-cid-hkbrpulz></path></svg><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button><nav id="site-nav" aria-label="Site" data-astro-cid-hkbrpulz><a href="/" data-astro-cid-hkbrpulz>Home</a><a class="episodes" href="/episodes/" data-astro-cid-hkbrpulz>Episodes</a><a href="/about/" data-astro-cid-hkbrpulz>About</a><a href="https://www.youtube.com/playlist?list=PLR-9Y4UPbi8n5DURn9WMeMu3V_EJ7GD-A" data-astro-cid-hkbrpulz>YouTube</a><a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>Code</a><a href="https://nenuadrian.github.io/mvGPT/" data-astro-cid-hkbrpulz>Docs</a><a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>Hugging Face</a></nav></div></header><header class="hero glow" data-astro-cid-rvm3voet><div class="wrap" data-astro-cid-rvm3voet><h1 class="display grad" data-astro-cid-rvm3voet>Try mvGPT</h1></div></header><main class="wrap" data-astro-cid-d5bup4pl><p class="lead" data-astro-cid-d5bup4pl>Both models run in this page, on your own computer, with <a href="https://huggingface.co/docs/transformers.js" data-astro-cid-d5bup4pl>Transformers.js</a>. Nothing downloads until the first story, and what you type never leaves the page.</p><div class="chat" data-astro-cid-d5bup4pl><section class="try" id="try" aria-labelledby="try-title" data-astro-cid-ybp5n6jr><div class="head" data-astro-cid-ybp5n6jr><h2 id="try-title" data-astro-cid-ybp5n6jr>Talk to mvGPT</h2><div class="models" role="radiogroup" aria-label="Model" data-astro-cid-ybp5n6jr><label data-astro-cid-ybp5n6jr><input type="radio" name="model" value="sft" checked data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>14.6M, fine-tuned</span></label><label data-astro-cid-ybp5n6jr><input type="radio" name="model" value="big" data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>91M, pretrained on 4 GPUs</span></label></div><span class="state" data-astro-cid-ybp5n6jr>ep003-sft · 8-bit · in your browser</span></div><ol class="log" aria-live="polite" data-astro-cid-ybp5n6jr></ol><form class="compose" data-astro-cid-ybp5n6jr><div class="line features" role="group" aria-label="Features" data-astro-cid-ybp5n6jr><span class="key" data-astro-cid-ybp5n6jr>Features:</span><label data-astro-cid-ybp5n6jr><input type="checkbox" value="Dialogue" data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>Dialogue</span></label><label data-astro-cid-ybp5n6jr><input type="checkbox" value="BadEnding" data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>BadEnding</span></label><label data-astro-cid-ybp5n6jr><input type="checkbox" value="MoralValue" data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>MoralValue</span></label><label data-astro-cid-ybp5n6jr><input type="checkbox" value="Twist" data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>Twist</span></label><label data-astro-cid-ybp5n6jr><input type="checkbox" value="Foreshadowing" data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>Foreshadowing</span></label><label data-astro-cid-ybp5n6jr><input type="checkbox" value="Conflict" data-astro-cid-ybp5n6jr><span data-astro-cid-ybp5n6jr>Conflict</span></label></div><div class="line ask" data-astro-cid-ybp5n6jr><label class="key" for="try-prompt" data-astro-cid-ybp5n6jr>Summary:</label><input id="try-prompt" name="prompt" type="text" autocomplete="off" required maxlength="200" placeholder="A dog makes a new friend at the park." data-astro-cid-ybp5n6jr><button type="submit" data-astro-cid-ybp5n6jr>Write</button></div></form><p class="note" data-model="sft" data-astro-cid-ybp5n6jr>A summary, or a few words to use (<code data-astro-cid-ybp5n6jr>sun, kite, brave</code>), and it writes a children's story. It doesn't answer questions, and each message is a new story. The first one downloads the model, about 15&nbsp;MB, from <a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-ybp5n6jr>Hugging Face</a>.</p><p class="note" data-model="big" hidden data-astro-cid-ybp5n6jr>The beginning of a story, and it carries on. Six times the size, it trained for 30 minutes on four GPUs, on all of TinyStories, and wasn't fine-tuned, so it doesn't follow instructions. The first story downloads the model, about 92&nbsp;MB, from <a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-ybp5n6jr>Hugging Face</a>.</p></section><!-- Plain JavaScript, left as it is by Vite, so it imports the library from the CDN when asked. --><script type="module">
+  const LIBRARY = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1';
+  const MODEL = 'nenuadrian/mvGPT';
+  // Revisions of the model repo: each one's context window, and whether it was fine-tuned on instructions.
+  const MODELS = {
+    sft: { revision: 'ep003-sft', context: 256, instructions: true },
+    big: { revision: 'ep012-pretrain', context: 512, instructions: false },
+  };
+
+  const root = document.querySelector('#try');
+  const form = root.querySelector('.compose');
+  const log = root.querySelector('.log');
+  const state = root.querySelector('.state');
+  const input = form.querySelector('input[name=prompt]');
+  const key = form.querySelector('label.key');
+  const button = form.querySelector('button');
+  const featureLine = form.querySelector('.features');
+  const notes = root.querySelectorAll('.note');
+
+  // The library, loaded on the first message, and each model on its own first message.
+  let library = null;
+  const writers = {};
+
+  function chosen() {
+    return root.querySelector('.models input:checked').value;
+  }
+
+  function idle() {
+    return `${MODELS[chosen()].revision} · 8-bit · in your browser`;
+  }
+
+  // mvGPT's detokenize: punctuation goes against the word before it.
+  function detokenize(tokens) {
+    return tokens
+      .join(' ')
+      .replace(/ ([.,!?;:]\S*)/g, '$1')
+      .replace(/(\w) ' (\w)/g, "$1'$2")
+      .replace(/(^|\s)" /g, '$1"');
+  }
+
+  // A list of short words is the words to use, and anything else the story's summary.
+  function words(text) {
+    const parts = text.split(',').map((part) => part.trim()).filter(Boolean);
+    const list = parts.length > 1 && parts.every((part) => part.split(/\s+/).length <= 2) && !/[.!?]$/.test(text);
+    return list ? parts : null;
+  }
+
+  // The instruction's lines, in the order the model was fine-tuned on.
+  function instruction(text, features) {
+    const list = words(text);
+    const lines = features.length ? [['Features', features.join(', ')]] : [];
+    lines.push(list ? ['Words', list.join(', ')] : ['Summary', /[.!?]$/.test(text) ? text : `${text}.`]);
+    return [...lines, ['Story', '']];
+  }
+
+  // The label follows what's typed and the model chosen, so the visitor sees what the model will be given.
+  function label() {
+    if (!MODELS[chosen()].instructions) return 'Begin:';
+    return words(input.value) ? 'Words:' : 'Summary:';
+  }
+  input.addEventListener('input', () => {
+    key.textContent = label();
+  });
+
+  for (const radio of root.querySelectorAll('.models input')) {
+    radio.addEventListener('change', () => {
+      const instructions = MODELS[chosen()].instructions;
+      featureLine.hidden = !instructions;
+      input.placeholder = instructions ? 'A dog makes a new friend at the park.' : 'Once upon a time, a little fox';
+      for (const note of notes) note.hidden = note.dataset.model !== chosen();
+      key.textContent = label();
+      if (!button.disabled) state.textContent = idle();
+    });
+  }
+
+  // An instruction shows as its lines, and the beginning of a story as the story's first words.
+  function entry(lines, given) {
+    const item = document.createElement('li');
+    const story = document.createElement('p');
+    story.className = 'story writing';
+    if (lines) {
+      const sent = document.createElement('pre');
+      for (const [name, value] of lines) {
+        const line = document.createElement('span');
+        const label = document.createElement('b');
+        label.textContent = `${name}:`;
+        line.append(label, value ? ` ${value}` : '', '\n');
+        sent.append(line);
+      }
+      item.append(sent);
+    } else {
+      const start = document.createElement('span');
+      start.className = 'given';
+      start.textContent = given;
+      story.append(start);
+    }
+    const more = document.createElement('span');
+    story.append(more);
+    const meta = document.createElement('p');
+    meta.className = 'meta';
+    item.append(story, meta);
+    log.append(item);
+    log.scrollTop = log.scrollHeight;
+    return { story, more, meta };
+  }
+
+  async function load(name, meta) {
+    if (!library) {
+      meta.textContent = 'downloading the library…';
+      library = await import(LIBRARY);
+    }
+    writers[name] = await library.pipeline('text-generation', MODEL, {
+      revision: MODELS[name].revision,
+      dtype: 'q8',
+      progress_callback: (p) => {
+        if (p.status === 'progress' && p.file?.endsWith('.onnx')) {
+          meta.textContent = `downloading mvGPT ${Math.round(p.progress ?? 0)}%`;
+        }
+      },
+    });
+  }
+
+  async function write(name, prompt, more, meta) {
+    if (!writers[name]) await load(name, meta);
+    const writer = writers[name];
+    meta.textContent = '';
+    state.textContent = 'writing…';
+
+    const ids = [];
+    let count = 0;
+    const streamer = new library.TextStreamer(writer.tokenizer, {
+      skip_prompt: true,
+      callback_function: () => {},
+      token_callback_function: (tokens) => {
+        ids.push(...tokens);
+        count += 1;
+        if (MODELS[name].instructions) {
+          // The word-level tokenizer drops whitespace, which mvGPT's detokenize puts back.
+          const pieces = ids.map((id) => writer.tokenizer.decode([id], { skip_special_tokens: true }));
+          more.textContent = detokenize(pieces.filter(Boolean));
+        } else {
+          // BPE keeps every byte, spaces and new lines included, so the tokens decode as they are.
+          more.textContent = writer.tokenizer.decode(ids, { skip_special_tokens: true });
+        }
+        log.scrollTop = log.scrollHeight;
+      },
+    });
+    const start = performance.now();
+    // The context window holds the prompt and the story together.
+    const max_new_tokens = Math.min(200, MODELS[name].context - writer.tokenizer.encode(prompt).length);
+    await writer(prompt, { max_new_tokens, do_sample: true, temperature: 0.8, top_k: 50, streamer });
+    const seconds = (performance.now() - start) / 1000;
+    meta.textContent = `${count} tokens · ${seconds.toFixed(1)} s · ${Math.round(count / seconds)} tokens/s`;
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    const name = chosen();
+    let prompt;
+    let shown;
+    if (MODELS[name].instructions) {
+      const features = [...form.querySelectorAll('.features input:checked')].map((box) => box.value);
+      const lines = instruction(text, features);
+      prompt = lines.map(([line, value]) => (value ? `${line}: ${value}` : `${line}:`)).join('\n');
+      shown = entry(lines);
+    } else {
+      prompt = text;
+      shown = entry(null, text);
+    }
+    input.value = '';
+    key.textContent = label();
+    button.disabled = true;
+    try {
+      await write(name, prompt, shown.more, shown.meta);
+    } catch (error) {
+      shown.meta.textContent = `something went wrong: ${error.message}`;
+      shown.meta.classList.add('error');
+    }
+    shown.story.classList.remove('writing');
+    state.textContent = idle();
+    button.disabled = false;
+    input.focus();
+  });
+</script></div><section class="models" aria-labelledby="models-title" data-astro-cid-d5bup4pl><h2 id="models-title" data-astro-cid-d5bup4pl>Where they come from</h2><dl data-astro-cid-d5bup4pl><dt data-astro-cid-d5bup4pl>14.6M, fine-tuned</dt><dd data-astro-cid-d5bup4pl>Pretrained on TinyStories, then fine-tuned to write the story an instruction asks for, in <a href="/ep003-sft/" data-astro-cid-d5bup4pl>episode 3</a>. It's given a summary or a few words, and the features to put in.</dd><dt data-astro-cid-d5bup4pl>91M, pretrained on 4 GPUs</dt><dd data-astro-cid-d5bup4pl>Six times the size, trained for 30 minutes on four GPUs on all of TinyStories, in <a href="/ep012-distributed/" data-astro-cid-d5bup4pl>episode 12</a>. It wasn't fine-tuned, so it carries on whatever it's given.</dd></dl><p data-astro-cid-d5bup4pl>Both are on <a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-d5bup4pl>Hugging Face</a>, as 8-bit ONNX exports of the checkpoints the episodes trained, and the code that trained them is <a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-d5bup4pl>on GitHub</a>.</p></section></main><script type="module" src="/_astro/Base.astro_astro_type_script_index_0_lang.uHA48Xs6.js"></script><footer class="foot" data-astro-cid-hkbrpulz><div class="wrap foot-cols" data-astro-cid-hkbrpulz><div class="foot-about" data-astro-cid-hkbrpulz><a class="brand" href="/" data-astro-cid-hkbrpulz><span class="curly">{</span><span class="grad">mvGPT</span><span class="curly">}</span></a><p data-astro-cid-hkbrpulz>Understand language models from the ground up: the whole training pipeline, from pretraining to reinforcement learning, with evaluation, metrics and diagnostics.</p><a class="subscribe" href="https://www.youtube.com/@adrian-m-nenu?sub_confirmation=1" data-astro-cid-hkbrpulz><svg viewBox="0 0 8 6" aria-hidden="true" shape-rendering="crispEdges" data-astro-cid-hkbrpulz><path d="M1 0h6v1h1v4h-1v1h-6v-1h-1v-4h1zM3 1.5v3l2.5-1.5z" fill-rule="evenodd" data-astro-cid-hkbrpulz></path></svg>Subscribe on YouTube</a></div><nav aria-labelledby="foot-explore" data-astro-cid-hkbrpulz><p class="foot-h" id="foot-explore" data-astro-cid-hkbrpulz>Explore</p><ul data-astro-cid-hkbrpulz><li data-astro-cid-hkbrpulz><a href="/" data-astro-cid-hkbrpulz>Home</a></li><li data-astro-cid-hkbrpulz><a href="/episodes/" data-astro-cid-hkbrpulz>Episodes</a></li><li data-astro-cid-hkbrpulz><a href="/about/" data-astro-cid-hkbrpulz>About</a></li><li data-astro-cid-hkbrpulz><a href="/rss.xml" data-astro-cid-hkbrpulz>RSS feed</a></li></ul></nav><nav aria-labelledby="foot-links" data-astro-cid-hkbrpulz><p class="foot-h" id="foot-links" data-astro-cid-hkbrpulz>Resources</p><ul data-astro-cid-hkbrpulz><li data-astro-cid-hkbrpulz><a href="https://www.youtube.com/playlist?list=PLR-9Y4UPbi8n5DURn9WMeMu3V_EJ7GD-A" data-astro-cid-hkbrpulz>YouTube</a></li><li data-astro-cid-hkbrpulz><a href="https://github.com/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>The code on GitHub</a></li><li data-astro-cid-hkbrpulz><a href="https://nenuadrian.github.io/mvGPT/" data-astro-cid-hkbrpulz>Docs</a></li><li data-astro-cid-hkbrpulz><a href="https://huggingface.co/nenuadrian/mvGPT" data-astro-cid-hkbrpulz>The models on Hugging Face</a></li></ul></nav><nav aria-labelledby="foot-series" data-astro-cid-hkbrpulz><p class="foot-h" id="foot-series" data-astro-cid-hkbrpulz>Series</p><ul data-astro-cid-hkbrpulz><li data-astro-cid-hkbrpulz><a href="https://nanommo.nenuadrian.com" data-astro-cid-hkbrpulz>nanoMMO</a></li><li data-astro-cid-hkbrpulz><a href="/" aria-current="page" class="here" data-astro-cid-hkbrpulz>mvGPT</a></li><li data-astro-cid-hkbrpulz><a href="https://smollergraph.nenuadrian.com" data-astro-cid-hkbrpulz>smollerGraph</a></li></ul></nav></div><div class="wrap foot-base" data-astro-cid-hkbrpulz><span data-astro-cid-hkbrpulz>mvGPT – Building a Minimum Viable GPT, A Language Model from Scratch</span><span data-astro-cid-hkbrpulz>© 2026 adrian m.n.</span></div></footer></body></html>
